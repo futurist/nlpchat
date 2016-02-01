@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<script type="text/javascript" src="http://1111hui.com/js/mousetrap.min.js"></script>
 <script type="text/javascript" src="http://1111hui.com/js/mithril.js"></script>
 <title></title>
 <style type="text/css">
@@ -12,9 +13,16 @@
 .tree1 li{
     cursor: default;
 }
+.tree1 li>span{
+    display: inline-block;
+}
 .selected>span{
     color:red;
-    display: inline-block;
+}
+.moving>span{
+    color:purple;
+    opacity: 0.5;
+    font-style: italic;
 }
 </style>
 </head>
@@ -22,110 +30,4 @@
 
 </body>
 </html>
-<script type="text/javascript">
-var data=[
-{
-    text:'root',
-    class:'asdfas',
-    _static:true,
-    children:[
-        ['sdfijosd','oisdjf'],
-        'osdfijoiasdjf',
-        {
-            text:'A',
-            _close:true,
-            children:[
-                {
-                    text:'A1',
-                    font:'red',
-                    children:null
-                },
-                {
-                    text:'A2'
-                },
-            ]
-        },
-        {
-            text:'B'
-        }
-    ]
-}]
-
-
-
-var com={
-    controller:function  (args) {
-        var ctrl = this
-        var data = args.data||[]
-        var selected = data.length ? data[0] : null
-        function _extend(src, dest){
-            Object.keys(dest)
-                .filter(k=> k[0]!=='_' && ['text','children'].indexOf(k)<0 )
-                .forEach(k=>{ /class|className/.test(k) ? (src[k]=src[k]||'', src[k]+=' '+dest[k]) : src[k]=dest[k] } )
-            return src
-        }
-        function interTree(arr, parent){
-            return !arr ? [] : {tag:'ul', attrs:{}, children:
-                arr.map( (v,idx)=>{
-                    v = typeof v=='string' ? {text:v} : v
-                    if( {}.toString.call(v)!="[object Object]" ) return v;
-                    return {
-                        tag : 'li',
-                        attrs : _extend({
-                            class: selected===v?'selected':'',
-                            onclick:function(e){
-                                e.stopPropagation()
-                                // add node
-                                if(e.ctrlKey){
-                                    e.preventDefault()
-                                    // add node before selected
-                                    if(e.altKey) v.children=v.children||[], v._close=false, v.children.splice(0,0,{text:'', _edit:true} )
-                                    // add child node as first child
-                                    else arr.splice(idx,0,{text:'', _edit:true} )
-                                    return
-                                }
-                                // remove node
-                                if(e.altKey){
-                                    arr.splice(idx,1)
-                                    // if it's no child, remove +/- symbol in parent
-                                    if(parent && !arr.length) delete parent.children, delete parent._close;
-                                    return
-                                }
-                                if(e.target.tagName.toUpperCase()=='INPUT') return;
-                                else if(v._edit) return v._edit = false;
-                                // close / open node
-                                if(!v._static) v._close = !v._close;
-                                selected = v;
-                            },
-                            // dbl click to edit
-                            ondblclick:function(e){
-                                e.stopPropagation()
-                                v._edit = true;
-                            }
-                        }, v),
-                        children : [
-                            v.children? m('a', v._close?'+ ':'- ') :[],
-                            v._edit ? m('input', {
-                                value:v.text,
-                                oninput:function(e){ v.text=this.value; }, 
-                                onkeydown:e=>{ if(e.keyCode==13)return v._edit=false; },
-                                config:el=>el.focus()
-                            } ) : m('span', v.text)
-                        ].concat( v._close ? [] : interTree(v.children, v) )
-                    }
-                })
-            }
-        }
-
-        ctrl.getDom = _=> interTree(data)
-
-    },
-    view:function(ctrl){
-        return m('.tree1', ctrl.getDom() )
-    }
-}
-
-m.mount( document.body, m.component(com, {data:data}) )
-
-
-</script>
+<script type="text/javascript" src="tree.js"></script>
