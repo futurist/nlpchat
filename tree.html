@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <script type="text/javascript" src="http://1111hui.com/js/mithril.js"></script>
 <title></title>
+<style type="text/css">
+.tree1 *{
+	-webkit-user-select:none;
+	user-select:none;
+}
+.tree1 li{
+	cursor: default;
+}
+</style>
 </head>
 <body>
 
@@ -49,7 +58,7 @@ function _extend(src, dest){
 }
 function interTree(arr){
 	return !arr ? [] : {tag:'ul', attrs:{}, children:
-		arr.map(v=>{
+		arr.map( (v,idx)=>{
 			v = type.call(v)==STRING ? {text:v} : v
 			if( type.call(v)!=OBJECT ) return v;
 			return {
@@ -57,16 +66,30 @@ function interTree(arr){
 				attrs : _extend({
 					onclick:function(e){
 						e.stopPropagation()
-						if(e.altKey) return v._edit = true;
+						if(e.ctrlKey){
+							e.preventDefault()
+							if(e.altKey) v.children=v.children||[], v._close=false, v.children.splice(0,0,{text:'', _edit:true} )
+							else arr.splice(idx,0,{text:'', _edit:true} )
+							return
+						}
+						if(e.altKey) return arr.splice(idx,1);
 						if(e.target.tagName.toUpperCase()=='INPUT') return;
 						else if(v._edit) return v._edit = false;
-						if(v._static) return;
-						v._close = !v._close
+						if(!v._static) v._close = !v._close;
+					},
+					ondblclick:function(e){
+						e.stopPropagation()
+						v._edit = true;
 					}
 				}, v),
 				children : [
 					v.children? (v._close?'+':'-') :[],
-					v._edit ? m('input', { value:v.text, oninput:m.withAttr('value', val=>{v.text=val}) } ) : v.text
+					v._edit ? m('input', {
+						value:v.text,
+						oninput:function(e){ v.text=this.value; }, 
+						onkeydown:e=>{ if(e.keyCode==13)return v._edit=false; },
+						config:el=>el.focus()
+					} ) : v.text
 				].concat( v._close ? [] : interTree(v.children) )
 			}
 		})
@@ -79,7 +102,7 @@ var com={
 
 	},
 	view:function(ctrl){
-		return interTree(data)
+		return m('.tree1', interTree(data))
 	}
 }
 
