@@ -30,6 +30,7 @@ var com={
         var data = args.data||[]
         var selected = data.length ? {node:data[0], idx:0, parent:null} : null
         var target = null
+        var undoList = []
         function _clone(dest){
             return JSON.parse( JSON.stringify(dest) )
         }
@@ -62,9 +63,10 @@ var com={
                                 // add node
                                 if(isDown&&e.ctrlKey){
                                     // add node before selected
-                                    if(e.altKey) v.children=v.children||[], v._close=false, v.children.splice(0,0,{text:'', _edit:true} )
+                                    if(e.altKey) v.children=v.children||[], v._close=false, v.children.splice(0,0,{text:'', _edit:true} ), undoList.push( function(){ v.children.splice(0,1) } );
                                     // add child node as first child
-                                    else arr.splice(idx,0,{text:'', _edit:true} )
+                                    else arr.splice(idx,0,{text:'', _edit:true} ), undoList.push( function(){ arr.splice(idx,1) } );
+                                    
                                     return
                                 }
                                 // remove node
@@ -88,6 +90,8 @@ var com={
                             ondblclick:function(e){
                                 e.stopPropagation()
                                 v._edit = true;
+                                var oldVal = v.text
+                                undoList.push(function(){ setTimeout(_=>{ v.text = oldVal; v._edit = false}) })
                             },
                         }, v),
                         children : [
@@ -95,7 +99,13 @@ var com={
                             v._edit ? m('input', {
                                 value:v.text,
                                 oninput:function(e){ v.text=this.value; }, 
-                                onkeydown:e=>{ if(e.keyCode==13)return v._edit=false; },
+                                onkeydown:e=>{ 
+                                    if(e.keyCode==13) return v._edit=false; 
+                                    if(e.keyCode==27){
+                                        var undo = undoList.pop()
+                                        if(undo) undo();
+                                    }
+                                },
                                 config:el=>el.focus()
                             } ) : m('span', v.text)
                         ].concat( v._close ? [] : interTree(v.children, v) )
@@ -109,7 +119,12 @@ var com={
             Mousetrap.unbind('ctrl+x')
             Mousetrap.unbind('ctrl+c')
             Mousetrap.unbind('ctrl+v')
+            Mousetrap.unbind('ctrl+z')
         }
+        Mousetrap.bind('ctrl+z', function(e){
+            var undo = undoList.pop()
+            if(undo) undo();
+        })
         Mousetrap.bind('ctrl+x', function(e){
             if(!selected.parent) return;
             target = Object.assign({type:'moving'}, selected)
@@ -121,7 +136,8 @@ var com={
             m.redraw()
         })
 
-        Mousetrap.bind('ctrl+v', function(e){
+        Mousetrap.bind('ctrl+v', doMoveCopy)
+        function doMoveCopy(e){
             if(!target||!selected||!target.parent||!selected.parent) return;
             if(selected.node===target.node) return;
             var sameLevel = selected.parent==target.parent
@@ -130,19 +146,19 @@ var com={
                 // fix index if target is same level
                 if(sameLevel && selected.idx<target.idx) target.idx++;
                 // fix index after splice
-                selected.idx++;
+                selected.idx++
             }
             if(target.type=='moving'){
-                var node = target.parent.children.splice(target.idx,1);
+                var node = target.parent.children.splice(target.idx,1)
                 if(sameLevel && selected.idx>target.idx) selected.idx--;
                 selected.parent.children.splice( selected.idx, 0, node.pop() )
-                selected.idx++;
+                selected.idx++
                 // fix index if target is same level
                 if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
                 target = null
             }
             m.redraw()
-        })
+        }
 
     },
     view:function(ctrl){
