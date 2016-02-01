@@ -122,11 +122,17 @@ var com={
             if(target.type){
                 selected.parent.children.splice( selected.idx, 0, _clone(target.node) )
                 if(selected.parent==target.parent){
+                    // fix index if target is same level
                     if(selected.idx<target.idx) target.idx++;
                 }
+                // fix index after splice
                 selected.idx++;
                 if(target.type=='moving'){
                     target.parent.children.splice(target.idx,1);
+                    if(selected.parent==target.parent){
+                        // fix index if target is same level
+                        if(selected.idx>target.idx) selected.idx--;
+                    }
                     if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
                     target = null
                 }
