@@ -55,11 +55,11 @@ var com={
                         tag : 'li',
                         attrs : _extend({
                             class: getClass(v),
-                            onclick:function(e){
+                            onmousedown:function(e){
                                 e.stopPropagation()
+                                e.preventDefault()
                                 // add node
                                 if(e.ctrlKey){
-                                    e.preventDefault()
                                     // add node before selected
                                     if(e.altKey) v.children=v.children||[], v._close=false, v.children.splice(0,0,{text:'', _edit:true} )
                                     // add child node as first child
@@ -76,8 +76,13 @@ var com={
                                 if(e.target.tagName.toUpperCase()=='INPUT') return;
                                 else if(v._edit) return v._edit = false;
                                 // close / open node
-                                if(!v._static) v._close = !v._close;
+                                if(!v._static && v.children) v._close = e.type=='mousemove' ? false : !v._close;
                                 selected = {node:v, idx:idx, parent:parent};
+                                console.log(v)
+                            },
+                            onmousemove:function(e){
+                                if(e.which!=1)return;
+                                this.onmousedown(e)
                             },
                             // dbl click to edit
                             ondblclick:function(e){
@@ -120,19 +125,16 @@ var com={
             if(!target||!selected||!target.parent||!selected.parent) return;
             if(selected.node===target.node) return;
             if(target.type){
+                var sameLevel = selected.parent==target.parent
                 selected.parent.children.splice( selected.idx, 0, _clone(target.node) )
-                if(selected.parent==target.parent){
-                    // fix index if target is same level
-                    if(selected.idx<target.idx) target.idx++;
-                }
+                // fix index if target is same level
+                if(sameLevel && selected.idx<target.idx) target.idx++;
                 // fix index after splice
                 selected.idx++;
                 if(target.type=='moving'){
                     target.parent.children.splice(target.idx,1);
-                    if(selected.parent==target.parent){
-                        // fix index if target is same level
-                        if(selected.idx>target.idx) selected.idx--;
-                    }
+                    // fix index if target is same level
+                    if(sameLevel && selected.idx>target.idx) selected.idx--;
                     if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
                     target = null
                 }
