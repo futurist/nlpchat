@@ -58,8 +58,9 @@ var com={
                             onmousedown:function(e){
                                 e.stopPropagation()
                                 e.preventDefault()
+                                var isDown = e.type=='mousedown'
                                 // add node
-                                if(e.ctrlKey){
+                                if(isDown&&e.ctrlKey){
                                     // add node before selected
                                     if(e.altKey) v.children=v.children||[], v._close=false, v.children.splice(0,0,{text:'', _edit:true} )
                                     // add child node as first child
@@ -67,7 +68,7 @@ var com={
                                     return
                                 }
                                 // remove node
-                                if(e.altKey){
+                                if(isDown&&e.altKey){
                                     arr.splice(idx,1)
                                     // if it's no child, remove +/- symbol in parent
                                     if(parent && !arr.length) delete parent.children, delete parent._close;
@@ -78,7 +79,6 @@ var com={
                                 // close / open node
                                 if(!v._static && v.children) v._close = e.type=='mousemove' ? false : !v._close;
                                 selected = {node:v, idx:idx, parent:parent};
-                                console.log(v)
                             },
                             onmousemove:function(e){
                                 if(e.which!=1)return;
@@ -124,20 +124,22 @@ var com={
         Mousetrap.bind('ctrl+v', function(e){
             if(!target||!selected||!target.parent||!selected.parent) return;
             if(selected.node===target.node) return;
-            if(target.type){
-                var sameLevel = selected.parent==target.parent
+            var sameLevel = selected.parent==target.parent
+            if(target.type=='copying'){
                 selected.parent.children.splice( selected.idx, 0, _clone(target.node) )
                 // fix index if target is same level
                 if(sameLevel && selected.idx<target.idx) target.idx++;
                 // fix index after splice
                 selected.idx++;
-                if(target.type=='moving'){
-                    target.parent.children.splice(target.idx,1);
-                    // fix index if target is same level
-                    if(sameLevel && selected.idx>target.idx) selected.idx--;
-                    if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
-                    target = null
-                }
+            }
+            if(target.type=='moving'){
+                var node = target.parent.children.splice(target.idx,1);
+                if(sameLevel && selected.idx>target.idx) selected.idx--;
+                selected.parent.children.splice( selected.idx, 0, node.pop() )
+                selected.idx++;
+                // fix index if target is same level
+                if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
+                target = null
             }
             m.redraw()
         })
