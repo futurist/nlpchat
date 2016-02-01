@@ -142,6 +142,7 @@ var com={
             Mousetrap.unbind('ctrl+c')
             Mousetrap.unbind('ctrl+v')
             Mousetrap.unbind('ctrl+z')
+            Mousetrap.unbind('del')
         }
         Mousetrap.bind('del', function(e){
             deleteNode( selected.parent.children, selected.idx, selected.parent )
@@ -174,6 +175,7 @@ var com={
                 if(sameLevel && selected.idx<target.idx) target.idx++;
                 // fix index after splice
                 selected.idx++
+                undoList=[]
             }
             if(target.type=='moving'){
                 var node = target.parent.children.splice(target.idx,1)
@@ -183,6 +185,7 @@ var com={
                 // fix index if target is same level
                 if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
                 target = null
+                undoList=[]
             }
             m.redraw()
         }
