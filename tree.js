@@ -30,6 +30,9 @@ var com={
         var data = args.data||[]
         var selected = data.length ? {node:data[0], idx:0, parent:null} : null
         var target = null
+        function _clone(dest){
+            return JSON.parse( JSON.stringify(dest) )
+        }
         function _extend(src, dest){
             Object.keys(dest)
                 .filter(k=> k[0]!=='_' && ['text','children'].indexOf(k)<0 )
@@ -97,7 +100,11 @@ var com={
         }
 
         ctrl.getDom = _=> interTree(data)
-
+        ctrl.onunload = e=>{
+            Mousetrap.unbind('ctrl+x')
+            Mousetrap.unbind('ctrl+c')
+            Mousetrap.unbind('ctrl+v')
+        }
         Mousetrap.bind('ctrl+x', function(e){
             if(!selected.parent) return;
             target = Object.assign({type:'moving'}, selected)
@@ -113,14 +120,15 @@ var com={
             if(!target||!selected||!target.parent||!selected.parent) return;
             if(selected.node===target.node) return;
             if(target.type){
-                selected.parent.children.splice( selected.idx, 0, Object.assign({}, target.node) )
+                selected.parent.children.splice( selected.idx, 0, _clone(target.node) )
                 if(selected.parent==target.parent){
-                    if(selected.idx>target.idx) selected.idx++;
                     if(selected.idx<target.idx) target.idx++;
                 }
+                selected.idx++;
                 if(target.type=='moving'){
                     target.parent.children.splice(target.idx,1);
                     if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
+                    target = null
                 }
             }
             m.redraw()
