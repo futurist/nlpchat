@@ -163,7 +163,7 @@ var com={
                                 // else if(v._edit) return v._edit = false;
                                 // close / open node
                                 if(!v._static && v.children) v._close = e.type=='mousemove' ? false : !v._close;
-                                selected = {node:v, idx:idx, parent:parent, path:path};
+                                selected = {node:v, idx:idx, parent:parent};
                             },
                             onmousemove:function(e){
                                 if(e.which!=1)return;
@@ -232,7 +232,7 @@ var com={
 
         Mousetrap.bind(['ctrl+v', 'ctrl+shift+v'], doMoveCopy)
         function doMoveCopy(e){
-            var isChild = e.shiftKey;
+            var isChild = !e.shiftKey;
             if(!target||!selected||!target.parent||!selected.parent) return;
             if(selected.node===target.node) return;
             if(target.type){
@@ -245,7 +245,7 @@ var com={
                 var sameLevel = selected.parent==target.parent
                 // fix index if target is same level
                 if(sameLevel && selected.idx<target.idx) target.idx++;
-                
+
                 if(target.type=='moving'){
                     deleteNode(target.parent, target.idx)
                     target = null
