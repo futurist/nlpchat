@@ -73,12 +73,14 @@ var com={
                 parent.children.splice(idx,1)
             } )
         }
-        function addChildNode(v, isLast){
+        function addChildNode(v, isLast, isLeaf){
+            if(v._leaf) return;
             v.children=v.children||[]
             var arr = v.children
             var idx = isLast? v.children.length :0
             var insert = {text:'', _edit:true}
             v._close=false
+            if(isLeaf) insert._leaf = true;
             v.children.splice(idx, 0, insert )
             selected = { node:v.children[idx], idx:idx, parent:v }
             undoList.push( function(){
@@ -87,6 +89,30 @@ var com={
                 arr.splice(idx,1)
                 if(!v.children.length) delete v.children, delete v._close;
             } )
+        }
+        function getInput(v){
+            if(v._leaf){
+                return m('textarea', {
+                    config:el=>el.focus(),
+                    oninput:function(e){ v.text=this.value; },
+                    onkeydown:e=>{
+                        if(e.keyCode==13 && e.ctrlKey) return v._edit=false;
+                    }
+                }, v.text)
+            }else{
+                return m('input', {
+                    config:el=>el.focus(),
+                    value:v.text,
+                    oninput:function(e){ v.text=this.value; }, 
+                    onkeydown:e=>{
+                        if(e.keyCode==13) return v._edit=false; 
+                        if(e.keyCode==27){
+                            var undo = undoList.pop()
+                            if(undo) undo();
+                        }
+                    },
+                } )
+            }
         }
         function interTree(arr, parent){
             return !arr ? [] : {tag:'ul', attrs:{}, children:
@@ -99,6 +125,7 @@ var com={
                             class: getClass(v),
                             onmousedown:function(e){
                                 e.stopPropagation()
+                                if( /input|textarea/i.test(e.target.tagName) ) return;
                                 e.preventDefault()
                                 var isDown = e.type=='mousedown'
                                 // add node
@@ -114,8 +141,7 @@ var com={
                                     deleteNode(parent, idx)
                                     return
                                 }
-                                if(e.target.tagName.toUpperCase()=='INPUT') return;
-                                else if(v._edit) return v._edit = false;
+                                // else if(v._edit) return v._edit = false;
                                 // close / open node
                                 if(!v._static && v.children) v._close = e.type=='mousemove' ? false : !v._close;
                                 selected = {node:v, idx:idx, parent:parent};
@@ -134,18 +160,9 @@ var com={
                         }, v),
                         children : [
                             v.children? m('a', v._close?'+ ':'- ') :[],
-                            v._edit ? m('input', {
-                                value:v.text,
-                                oninput:function(e){ v.text=this.value; }, 
-                                onkeydown:e=>{ 
-                                    if(e.keyCode==13) return v._edit=false; 
-                                    if(e.keyCode==27){
-                                        var undo = undoList.pop()
-                                        if(undo) undo();
-                                    }
-                                },
-                                config:el=>el.focus()
-                            } ) : m('span', v.text)
+                            v._edit 
+                                ? getInput(v)
+                                : m(v._leaf ? 'pre' : 'span', v.text)
                         ].concat( v._close ? [] : interTree(v.children, v) )
                     }
                 })
@@ -162,6 +179,10 @@ var com={
         }
         Mousetrap.bind('del', function(e){
             deleteNode( selected.parent, selected.idx )
+            m.redraw()
+        })
+        Mousetrap.bind('ctrl+enter', function(e){
+            addChildNode( selected.node, true, true )
             m.redraw()
         })
         Mousetrap.bind('shift+enter', function(e){
@@ -205,6 +226,7 @@ var com={
                 undoList.push(function(){
                     // var idx = arr.indexOf(insert)
                     arr.splice(idx, 1)
+                    target = null
                 })
             }
             if(target.type=='moving'){
@@ -226,6 +248,7 @@ var com={
                     dest._close = destClose
                     dest.children = destArr
                     destArr.splice( destIdx, 0, srcArr.splice(srcIdx,1)[0] )
+                    target = null
                 })
             }
             m.redraw()
