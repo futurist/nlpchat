@@ -47,6 +47,13 @@ var com={
             c+=target&&target.node===node? target.type :''
             return c
         }
+        function getCommonPath(node1, node2) {
+            var path1 = node1._path, path2=node2._path, r=[]
+            for(var i=0, n=path1.length; i<n; i++){
+                if(path1[i] === path2[i]) r.push(path1[i])
+            }
+            return r;
+        }
         function deleteNode(parent, idx ){
             if(!parent)return;
             var arr = parent.children = parent.children||[]
@@ -60,11 +67,17 @@ var com={
             // if it's no child, remove +/- symbol in parent
             if(parent && !arr.length) delete parent.children, delete parent._close;
         }
-        function addNode(parent, _idx, isAfter){
+        function insertNode(node, parent, _idx, isAfter){
+            return addNode( parent, _idx, isAfter, node )
+        }
+        function insertChildNode(node, v, isLast) {
+            return addChildNode( v, isLast, v._leaf, node )
+        }
+        function addNode(parent, _idx, isAfter, existsNode){
             if(!parent)return;
             var arr = parent.children = parent.children||[]
             idx = isAfter? _idx+1 :_idx
-            var insert = {text:'', _edit:true}
+            var insert = existsNode || {text:'', _edit:true}
             arr.splice(idx,0, insert)
             selected = { node:arr[idx], idx:idx, parent:parent }
             undoList.push( function(){
@@ -72,13 +85,14 @@ var com={
                 var idx = parent.children.indexOf(insert)
                 parent.children.splice(idx,1)
             } )
+            return selected
         }
-        function addChildNode(v, isLast, isLeaf){
+        function addChildNode(v, isLast, isLeaf, existsNode){
             if(v._leaf) return;
             v.children=v.children||[]
             var arr = v.children
             var idx = isLast? v.children.length :0
-            var insert = {text:'', _edit:true}
+            var insert = existsNode || {text:'', _edit:true}
             v._close=false
             if(isLeaf) insert._leaf = true;
             v.children.splice(idx, 0, insert )
@@ -89,6 +103,7 @@ var com={
                 arr.splice(idx,1)
                 if(!v.children.length) delete v.children, delete v._close;
             } )
+            return selected
         }
         function getInput(v){
             if(v._leaf){
@@ -114,15 +129,19 @@ var com={
                 } )
             }
         }
-        function interTree(arr, parent){
+        function interTree(arr, parent, path){
+            path=path||[];
             return !arr ? [] : {tag:'ul', attrs:{}, children:
                 arr.map( (v,idx)=>{
+                    v._path = path.concat(idx)
                     v = typeof v=='string' ? {text:v} : v
                     if( {}.toString.call(v)!="[object Object]" ) return v;
                     return {
                         tag : 'li',
                         attrs : _extend({
                             class: getClass(v),
+                            config: (el,old,context)=>{
+                            },
                             onmousedown:function(e){
                                 e.stopPropagation()
                                 if( /input|textarea/i.test(e.target.tagName) ) return;
@@ -144,7 +163,7 @@ var com={
                                 // else if(v._edit) return v._edit = false;
                                 // close / open node
                                 if(!v._static && v.children) v._close = e.type=='mousemove' ? false : !v._close;
-                                selected = {node:v, idx:idx, parent:parent};
+                                selected = {node:v, idx:idx, parent:parent, path:path};
                             },
                             onmousemove:function(e){
                                 if(e.which!=1)return;
@@ -160,16 +179,18 @@ var com={
                         }, v),
                         children : [
                             v.children? m('a', v._close?'+ ':'- ') :[],
-                            v._edit 
+                            v._edit
                                 ? getInput(v)
                                 : m(v._leaf ? 'pre' : 'span', v.text)
-                        ].concat( v._close ? [] : interTree(v.children, v) )
+                        ].concat( v._close ? [] : interTree(v.children, v, path.concat(idx) ) )
                     }
                 })
             }
         }
 
-        ctrl.getDom = _=> interTree(data)
+        ctrl.getDom = _=>{
+            return interTree(data)
+        }
         ctrl.onunload = e=>{
             Mousetrap.unbind('ctrl+x')
             Mousetrap.unbind('ctrl+c')
@@ -209,47 +230,30 @@ var com={
             m.redraw()
         })
 
-        Mousetrap.bind('ctrl+v', doMoveCopy)
+        Mousetrap.bind(['ctrl+v', 'ctrl+shift+v'], doMoveCopy)
         function doMoveCopy(e){
+            var isChild = e.shiftKey;
             if(!target||!selected||!target.parent||!selected.parent) return;
             if(selected.node===target.node) return;
-            var sameLevel = selected.parent==target.parent
-            if(target.type=='copying'){
-                var arr = selected.parent.children
-                var idx = selected.idx
+            if(target.type){
                 var insert = _clone(target.node)
-                arr.splice( idx, 0, insert )
+                if(isChild){
+                    selected = insertChildNode( insert, selected.node )    // insert as first child
+                }else{
+                    selected = insertNode(insert, selected.parent, selected.idx )
+                }
+                var sameLevel = selected.parent==target.parent
                 // fix index if target is same level
                 if(sameLevel && selected.idx<target.idx) target.idx++;
-                // fix index after splice
-                selected.idx++
-                undoList.push(function(){
-                    // var idx = arr.indexOf(insert)
-                    arr.splice(idx, 1)
+                
+                if(target.type=='moving'){
+                    deleteNode(target.parent, target.idx)
                     target = null
-                })
-            }
-            if(target.type=='moving'){
-                var node = target.parent.children.splice(target.idx,1).pop()
-                var stack = [target.parent, target.parent._close, target.parent.children, target.idx, selected.parent.children]
-                if(sameLevel && selected.idx>target.idx) selected.idx--;
-                selected.parent.children.splice( selected.idx, 0, node )
-                selected.idx++
-                // fix index if target is same level
-                if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
-                target = null
-                undoList.push(function(){
-                    var srcArr = stack.pop()
-                    var srcIdx = srcArr.indexOf(node)
-                    var destIdx = stack.pop()
-                    var destArr = stack.pop()
-                    var destClose = stack.pop()
-                    var dest = stack.pop()
-                    dest._close = destClose
-                    dest.children = destArr
-                    destArr.splice( destIdx, 0, srcArr.splice(srcIdx,1)[0] )
-                    target = null
-                })
+                    undoList.push(function(){
+                        undoList.pop()()
+                        undoList.pop()()
+                    })
+                }
             }
             m.redraw()
         }
