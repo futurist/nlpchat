@@ -67,7 +67,8 @@ var com={
             var insert = {text:'', _edit:true}
             arr.splice(idx,0, insert)
             selected = { node:arr[idx], idx:idx, parent:parent }
-            undoList.push( function(){ 
+            undoList.push( function(){
+                // cannot rely on stored index, coze it maybe changed, recalc again
                 var idx = parent.children.indexOf(insert)
                 parent.children.splice(idx,1)
             } )
@@ -81,6 +82,7 @@ var com={
             v.children.splice(idx, 0, insert )
             selected = { node:v.children[idx], idx:idx, parent:v }
             undoList.push( function(){
+                // cannot rely on stored index, coze it maybe changed, recalc again
                 var idx = arr.indexOf(insert)
                 arr.splice(idx,1)
                 if(!v.children.length) delete v.children, delete v._close;
@@ -192,22 +194,39 @@ var com={
             if(selected.node===target.node) return;
             var sameLevel = selected.parent==target.parent
             if(target.type=='copying'){
-                selected.parent.children.splice( selected.idx, 0, _clone(target.node) )
+                var arr = selected.parent.children
+                var idx = selected.idx
+                var insert = _clone(target.node)
+                arr.splice( idx, 0, insert )
                 // fix index if target is same level
                 if(sameLevel && selected.idx<target.idx) target.idx++;
                 // fix index after splice
                 selected.idx++
-                undoList=[]
+                undoList.push(function(){
+                    // var idx = arr.indexOf(insert)
+                    arr.splice(idx, 1)
+                })
             }
             if(target.type=='moving'){
-                var node = target.parent.children.splice(target.idx,1)
+                var node = target.parent.children.splice(target.idx,1).pop()
+                var stack = [target.parent, target.parent._close, target.parent.children, target.idx, selected.parent.children]
                 if(sameLevel && selected.idx>target.idx) selected.idx--;
-                selected.parent.children.splice( selected.idx, 0, node.pop() )
+                selected.parent.children.splice( selected.idx, 0, node )
                 selected.idx++
                 // fix index if target is same level
                 if(!target.parent.children.length) delete target.parent.children, delete target.parent._close;
                 target = null
-                undoList=[]
+                undoList.push(function(){
+                    var srcArr = stack.pop()
+                    var srcIdx = srcArr.indexOf(node)
+                    var destIdx = stack.pop()
+                    var destArr = stack.pop()
+                    var destClose = stack.pop()
+                    var dest = stack.pop()
+                    dest._close = destClose
+                    dest.children = destArr
+                    destArr.splice( destIdx, 0, srcArr.splice(srcIdx,1)[0] )
+                })
             }
             m.redraw()
         }
