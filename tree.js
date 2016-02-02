@@ -47,28 +47,42 @@ var com={
             c+=target&&target.node===node? target.type :''
             return c
         }
-        function deleteNode(arr, idx, parent){
+        function deleteNode(parent, idx ){
+            if(!parent)return;
+            var arr = parent.children = parent.children||[]
             var oldStack=[ arr[idx], parent.children, parent._close ]
             undoList.push(function(){
                 parent._close = oldStack.pop()
                 parent.children = oldStack.pop()
-                arr.splice(idx,0, oldStack.pop())
+                parent.children.splice(idx,0, oldStack.pop() )
             })
             arr.splice(idx,1)
             // if it's no child, remove +/- symbol in parent
             if(parent && !arr.length) delete parent.children, delete parent._close;
         }
-        function addNode(arr, idx, isAfter){
-            arr.splice(idx,0,{text:'', _edit:true} )
-            undoList.push( function(){ arr.splice(idx,1) } )
+        function addNode(parent, _idx, isAfter){
+            if(!parent)return;
+            var arr = parent.children = parent.children||[]
+            idx = isAfter? _idx+1 :_idx
+            var insert = {text:'', _edit:true}
+            arr.splice(idx,0, insert)
+            selected = { node:arr[idx], idx:idx, parent:parent }
+            undoList.push( function(){ 
+                var idx = parent.children.indexOf(insert)
+                parent.children.splice(idx,1)
+            } )
         }
         function addChildNode(v, isLast){
             v.children=v.children||[]
+            var arr = v.children
             var idx = isLast? v.children.length :0
+            var insert = {text:'', _edit:true}
             v._close=false
-            v.children.splice(idx, 0, {text:'', _edit:true} )
+            v.children.splice(idx, 0, insert )
+            selected = { node:v.children[idx], idx:idx, parent:v }
             undoList.push( function(){
-                v.children.splice(idx,1)
+                var idx = arr.indexOf(insert)
+                arr.splice(idx,1)
                 if(!v.children.length) delete v.children, delete v._close;
             } )
         }
@@ -90,12 +104,12 @@ var com={
                                     // add node before selected
                                     if(e.altKey) addChildNode(v);
                                     // add child node as first child
-                                    else addNode(arr, idx);
+                                    else addNode(parent, idx);
                                     return
                                 }
                                 // remove node
                                 if(isDown&&e.altKey){
-                                    deleteNode(arr,idx,parent)
+                                    deleteNode(parent, idx)
                                     return
                                 }
                                 if(e.target.tagName.toUpperCase()=='INPUT') return;
@@ -145,7 +159,15 @@ var com={
             Mousetrap.unbind('del')
         }
         Mousetrap.bind('del', function(e){
-            deleteNode( selected.parent.children, selected.idx, selected.parent )
+            deleteNode( selected.parent, selected.idx )
+            m.redraw()
+        })
+        Mousetrap.bind('shift+enter', function(e){
+            addChildNode( selected.node, true )
+            m.redraw()
+        })
+        Mousetrap.bind('enter', function(e){
+            addNode( selected.parent, selected.idx, true )
             m.redraw()
         })
         Mousetrap.bind('ctrl+z', function(e){
