@@ -121,7 +121,7 @@
 	        function addNode(parent, _idx, isAfter, existsNode) {
 	            if (!parent) return;
 	            var arr = parent.children = parent.children || [];
-	            idx = isAfter ? _idx + 1 : _idx;
+	            var idx = isAfter ? _idx + 1 : _idx;
 	            var insert = existsNode || { text: '', _edit: true };
 	            arr.splice(idx, 0, insert);
 	            selected = { node: arr[idx], idx: idx, parent: parent };
@@ -193,7 +193,11 @@
 	                        attrs: _extend({
 	                            class: getClass(v),
 	                            config: function config(el, old, context) {},
+	                            onclick: function onclick(e){
+	                            	console.log('onclick',e)
+	                            },
 	                            onmousedown: function onmousedown(e) {
+	                            	console.log('down')
 	                                e.stopPropagation();
 	                                if (/input|textarea/i.test(e.target.tagName)) return;
 	                                e.preventDefault();
@@ -222,6 +226,7 @@
 	                            },
 	                            // dbl click to edit
 	                            ondblclick: function ondblclick(e) {
+	                            	console.log('ondblclick',e)
 	                                e.stopPropagation();
 	                                v._edit = true;
 	                                var oldVal = v.text;
@@ -313,7 +318,12 @@
 	    }
 	};
 
-	m.mount(document.body, m.component(com, { data: data }));
+	m.mount( document.body, m.component(com, {data:data}) )
+
+	// below line will remove -webkit-user-select:none;
+	// which cause phantomjs input cannot be selected!!!!!
+	if(window._phantom) document.body.className = 'phantom'
+
 
 /***/ }
 /******/ ]);

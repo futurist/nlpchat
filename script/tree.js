@@ -76,7 +76,7 @@ var com={
         function addNode(parent, _idx, isAfter, existsNode){
             if(!parent)return;
             var arr = parent.children = parent.children||[]
-            idx = isAfter? _idx+1 :_idx
+            var idx = isAfter? _idx+1 :_idx
             var insert = existsNode || {text:'', _edit:true}
             arr.splice(idx,0, insert)
             selected = { node:arr[idx], idx:idx, parent:parent }
@@ -266,4 +266,7 @@ var com={
 
 m.mount( document.body, m.component(com, {data:data}) )
 
+// below line will remove -webkit-user-select:none;
+// which cause phantomjs input cannot be selected!!!!!
+if(window._phantom) document.body.className = 'phantom'
 
