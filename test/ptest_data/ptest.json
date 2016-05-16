@@ -1,0 +1,23 @@
+{
+  "url": "http://1111hui.com/nlp/tree.html",
+  "ptest_data": {
+    "node": {
+      "expand": {
+        "name": 1459850842156,
+        "span": 33742
+      },
+      "create": {
+        "name": 1459850921262,
+        "span": 66690
+      },
+      "edit": {
+        "name": 1459850995089,
+        "span": 55529
+      },
+      "copy": {
+        "name": 1459940944673,
+        "span": 29600
+      }
+    }
+  }
+}

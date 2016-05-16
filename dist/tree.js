@@ -50,7 +50,8 @@
 	    text: 'root',
 	    class: 'asdfas',
 	    _static: true,
-	    children: [{
+	    children: [
+        {
 	        text: 'A',
 	        _close: true,
 	        children: [{
@@ -60,9 +61,24 @@
 	        }, {
 	            text: 'A2'
 	        }]
-	    }, {
-	        text: 'B'
-	    }]
+	    }, 
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        {text: 'B'},
+        ]
 	}];
 
 	var com = {

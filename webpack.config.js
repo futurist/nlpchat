@@ -10,7 +10,7 @@ module.exports = {
     },
     module: {
         loaders: [
-            { 
+            {
                 test: path.join(__dirname, 'script'),
                 exclude: /(node_modules|bower_components)/,
                 loader: 'babel-loader',
