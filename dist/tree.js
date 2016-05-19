@@ -78,15 +78,17 @@
 	  }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }]
 	}];
 
-	//========================================
+	//
+	// ========================================
 	// Helper Function
-	//========================================
+	// ========================================
 	/**
 	 * isInputactive - check whether user is editing
 	 * @returns {boolean}
 	 */
-	function isInputActive() {
-	  return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName) > -1;
+	function isInputActive(el) {
+	  return (/input|textarea/i.test((el || document.activeElement).tagName)
+	  );
 	}
 
 	/**
@@ -103,23 +105,33 @@
 	  return button == 1;
 	}
 
+	function detectRightButton(e) {
+	  var rightclick;
+	  if (!e) var e = window.event;
+	  if (e.which) rightclick = e.which == 3;else if (e.button) rightclick = e.button == 2;
+	  return rightclick;
+	}
+
 	var com = {
+	  //
 	  // controller
 	  controller: function controller(args) {
 	    var ctrl = this;
 	    var data = args.data || [];
 	    /**
 	     * selected =>{
-	          node {object} selected node object
-	          idx {number} index at parent node
-	          parent {object} parent object, or null if it's root
-	       }
+	     node {object} selected node object
+	     idx {number} index at parent node
+	     parent {object} parent object, or null if it's root
+	     }
 	     */
 	    var selected = data.length ? { node: data[0], idx: 0, parent: null } : null;
 	    // move or copy target node
 	    var target = null;
 	    // undoList array for manage undo
 	    var undoList = [];
+	    // Mouse guesture store array
+	    var mouseGuesture = [];
 	    function _clone(dest) {
 	      return JSON.parse(JSON.stringify(dest));
 	    }
@@ -279,7 +291,7 @@
 	              config: function config(el, old, context) {},
 	              onmousedown: function onmousedown(e) {
 	                e.stopPropagation();
-	                if (/input|textarea/i.test(e.target.tagName)) return;
+	                if (isInputActive(e.target)) return;
 	                e.preventDefault();
 	                var isDown = e.type == 'mousedown';
 	                // add node
@@ -335,6 +347,7 @@
 	      Mousetrap.unbind('del');
 	    };
 
+	    //
 	    // Mousetrap definition
 	    Mousetrap.bind('del', function (e) {
 	      deleteNode(selected.parent, selected.idx);
@@ -398,6 +411,7 @@
 	    }
 	  },
 
+	  //
 	  // view
 	  view: function view(ctrl) {
 	    return m('.tree1', ctrl.getDom());

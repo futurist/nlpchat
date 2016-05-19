@@ -48,16 +48,16 @@ var data = [{
   ]
 }]
 
-
-//========================================
+//
+// ========================================
 // Helper Function
-//========================================
+// ========================================
 /**
  * isInputactive - check whether user is editing
  * @returns {boolean}
  */
-function isInputActive() {
-  return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName) > -1
+function isInputActive (el) {
+  return /input|textarea/i.test((el || document.activeElement).tagName)
 }
 
 /**
@@ -74,23 +74,34 @@ function detectLeftButton (evt) {
   return button == 1
 }
 
+function detectRightButton (e) {
+  var rightclick
+  if (!e) var e = window.event
+  if (e.which) rightclick = (e.which == 3)
+  else if (e.button) rightclick = (e.button == 2)
+  return rightclick
+}
+
 var com = {
-  // controller
+  //
+  // controller
   controller: function (args) {
     var ctrl = this
     var data = args.data || []
     /**
      * selected =>{
-          node {object} selected node object
-          idx {number} index at parent node
-          parent {object} parent object, or null if it's root
-       }
+     node {object} selected node object
+     idx {number} index at parent node
+     parent {object} parent object, or null if it's root
+     }
      */
     var selected = data.length ? {node: data[0], idx: 0, parent: null} : null
     // move or copy target node
     var target = null
     // undoList array for manage undo
     var undoList = []
+    // Mouse guesture store array
+    var mouseGuesture = []
     function _clone (dest) {
       return JSON.parse(JSON.stringify(dest))
     }
@@ -125,8 +136,6 @@ var com = {
       return c
     }
 
-
-
     /**
      * get common path from 2 nodes
      * @param {} tree node1
@@ -140,8 +149,6 @@ var com = {
       }
       return r
     }
-
-
 
     /**
      * delete node of parent in idx
@@ -246,7 +253,7 @@ var com = {
             },
             onmousedown: function (e) {
               e.stopPropagation()
-              if (/input|textarea/i.test(e.target.tagName)) return
+              if (isInputActive(e.target)) return
               e.preventDefault()
               var isDown = e.type == 'mousedown'
               // add node
@@ -268,7 +275,7 @@ var com = {
               selected = {node: v, idx: idx, parent: parent}
             },
             onmousemove: function (e) {
-              if ( !detectLeftButton(e) )return
+              if (!detectLeftButton(e))return
               this.onmousedown(e)
             },
             // dbl click to edit
@@ -307,7 +314,8 @@ var com = {
       Mousetrap.unbind('del')
     }
 
-    // Mousetrap definition
+    //
+    // Mousetrap definition
     Mousetrap.bind('del', function (e) {
       deleteNode(selected.parent, selected.idx)
       m.redraw()
@@ -325,7 +333,7 @@ var com = {
       m.redraw()
     })
     Mousetrap.bind('ctrl+z', function (e) {
-      if(isInputActive()) return
+      if (isInputActive()) return
       var undo = undoList.pop()
       if (undo) undo()
       m.redraw(true)
@@ -370,7 +378,8 @@ var com = {
     }
   },
 
-  // view
+  //
+  // view
   view: function (ctrl) {
     return m('.tree1', ctrl.getDom())
   }
