@@ -78,7 +78,15 @@
 	  }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }]
 	}];
 
+	//========================================
+	// Helper Function
+	//========================================
+	var isInputActive = function isInputActive() {
+	  return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName) > -1;
+	};
+
 	var com = {
+	  // controller
 	  controller: function controller(args) {
 	    var ctrl = this;
 	    var data = args.data || [];
@@ -97,9 +105,6 @@
 	    function _clone(dest) {
 	      return JSON.parse(JSON.stringify(dest));
 	    }
-	    var isInputActive = function isInputActive() {
-	      return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName) > -1;
-	    };
 	    /**
 	     * Extend tree object, ignore _, text, children attr
 	     * If there's already has className in src, merge className by SPC
@@ -236,6 +241,13 @@
 	        });
 	      }
 	    }
+	    /**
+	     * interTree interate tree node for children
+	     * @param {array} arr - children node array, usually from data.children
+	     * @param {object} parent - parent node
+	     * @param {array} path - object path array
+	     * @returns {object} mithril dom object, it's ul tag object
+	     */
 	    function interTree(arr, parent, path) {
 	      path = path || [];
 	      return !arr ? [] : { tag: 'ul', attrs: {}, children: arr.map(function (v, idx) {
@@ -280,7 +292,11 @@
 	                v._edit = true;
 	                var oldVal = v.text;
 	                undoList.push(function () {
-	                  v.text = oldVal;v._edit = false;
+	                  setTimeout(function (_) {
+	                    v.text = oldVal;
+	                    v._edit = false;
+	                    m.redraw();
+	                  });
 	                });
 	              }
 	            }, v),
@@ -300,6 +316,8 @@
 	      Mousetrap.unbind('ctrl+z');
 	      Mousetrap.unbind('del');
 	    };
+
+	    // Mousetrap definition
 	    Mousetrap.bind('del', function (e) {
 	      deleteNode(selected.parent, selected.idx);
 	      m.redraw();
@@ -320,7 +338,7 @@
 	      if (isInputActive()) return;
 	      var undo = undoList.pop();
 	      if (undo) undo();
-	      m.redraw();
+	      m.redraw(true);
 	    });
 	    Mousetrap.bind('ctrl+x', function (e) {
 	      if (!selected.parent) return;
@@ -361,6 +379,8 @@
 	      m.redraw();
 	    }
 	  },
+
+	  // view
 	  view: function view(ctrl) {
 	    return m('.tree1', ctrl.getDom());
 	  }
