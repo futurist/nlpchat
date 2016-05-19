@@ -52,10 +52,27 @@ var data = [{
 //========================================
 // Helper Function
 //========================================
-var isInputActive = function(){
-      return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName)>-1
-    }
+/**
+ * isInputactive - check whether user is editing
+ * @returns {boolean}
+ */
+function isInputActive() {
+  return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName) > -1
+}
 
+/**
+ * detectleftbutton - detect if the left and only the left mouse button is pressed
+ * @param {} evt - event object to check, e.g. onmousemove
+ * @returns {boolean}
+ */
+function detectLeftButton (evt) {
+  evt = evt || window.event
+  if ('buttons' in evt) {
+    return evt.buttons == 1
+  }
+  var button = evt.which || evt.button
+  return button == 1
+}
 
 var com = {
   // controller
@@ -251,7 +268,7 @@ var com = {
               selected = {node: v, idx: idx, parent: parent}
             },
             onmousemove: function (e) {
-              if (e.which != 1)return
+              if ( !detectLeftButton(e) )return
               this.onmousedown(e)
             },
             // dbl click to edit
