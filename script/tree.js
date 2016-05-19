@@ -1,38 +1,74 @@
-var data = [
-  {
-    text: 'root',
-    class: 'asdfas',
-    _static: true,
-    children: [
-      {
-        text: 'A',
-        _close: true,
-        children: [
-          {
-            text: 'A1',
-            font: 'red',
-            children: null
-          },
-          {
-            text: 'A2'
-          },
-        ]
-      },
-      {
-        text: 'B'
-      }
-    ]
-  }]
+/**
+ * DATA format:
+ * node -> {
+ text             {string}  displayed text for html
+ class            {string}  className for node
+ // font          {string}  the font color
+ _static          {boolean} whether folder expand on mousemove
+ _close           {boolean} true : folder close, false : folder open
+ _edit            {boolean} true  : node text edit status, false : node text display status
+ _leaf [auto]     {boolean} true  : Leaf node, false : Folder node
+ _path [readOnly] {string}  object path from root
+ _idx  [readOnly] {number}  index in parent node
+ children         {array}   node type of children; null denotes _leaf node
+ }
+ */
+var data = [{
+  text: 'root',
+  class: 'asdfas',
+  _static: true,
+  children: [
+    {
+      text: 'A',
+      _close: true,
+      children: [{
+        text: 'A1',
+        font: 'red',
+        children: null
+      }, {
+        text: 'A2'
+      }]
+    },
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+    {text: 'B'},
+  ]
+}]
 
 var com = {
   controller: function (args) {
     var ctrl = this
     var data = args.data || []
+    /**
+     * selected =>{
+          node {object} selected node object
+          idx {number} index at parent node
+          parent {object} parent object, or null if it's root
+       }
+     */
     var selected = data.length ? {node: data[0], idx: 0, parent: null} : null
+    // move or copy target node
     var target = null
+    // undoList array for manage undo
     var undoList = []
     function _clone (dest) {
       return JSON.parse(JSON.stringify(dest))
+    }
+    var isInputActive = function(){
+      return ['INPUT', 'TEXTAREA'].indexOf(document.activeElement.tagName)>-1
     }
     /**
      * Extend tree object, ignore _, text, children attr
@@ -49,6 +85,7 @@ var com = {
             /class|className/.test(k) ? (dest[k] = dest[k] || '', dest[k] += ' ' + src[k]) : dest[k] = src[k]})
       return dest
     }
+
     /**
      * Generate right class name from node attr
      * e.g. selected if it's selected node
@@ -63,6 +100,9 @@ var com = {
       c += target && target.node === node ? target.type : ''
       return c
     }
+
+
+
     /**
      * get common path from 2 nodes
      * @param {} tree node1
@@ -76,6 +116,9 @@ var com = {
       }
       return r
     }
+
+
+
     /**
      * delete node of parent in idx
      * @param {} parent node
@@ -151,6 +194,8 @@ var com = {
             if (e.keyCode == 27) {
               var undo = undoList.pop()
               if (undo) undo()
+              v._edit = false
+              m.redraw()
             }
           },
         })
@@ -200,8 +245,8 @@ var com = {
               e.stopPropagation()
               v._edit = true
               var oldVal = v.text
-              undoList.push(function () { setTimeout(_ => {
-                v.text = oldVal; v._edit = false}) })
+              undoList.push(function () {
+                v.text = oldVal; v._edit = false })
             },
           }, v),
           children: [
@@ -242,6 +287,7 @@ var com = {
       m.redraw()
     })
     Mousetrap.bind('ctrl+z', function (e) {
+      if(isInputActive()) return
       var undo = undoList.pop()
       if (undo) undo()
       m.redraw()
@@ -290,9 +336,8 @@ var com = {
   }
 }
 
-m.mount( document.body, m.component(com, {data:data}) )
+m.mount(document.body, m.component(com, {data: data}))
 
-// below line will remove -webkit-user-select:none;
+// below line will remove -webkit-user-select:none
 // which cause phantomjs input cannot be selected!!!!!
-if(window._phantom) document.body.className = 'phantom'
-
+if (window._phantom) document.body.className = 'phantom'
