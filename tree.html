@@ -1,12 +1,28 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<script type="text/javascript" src="http://1111hui.com/js/mousetrap.min.js"></script>
-<script type="text/javascript" src="http://1111hui.com/js/polyfill.js"></script>
-<script type="text/javascript" src="http://1111hui.com/js/mithril.js"></script>
-<title></title>
-<style type="text/css">
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="http://1111hui.com/js/mousetrap.min.js"></script>
+    <script type="text/javascript" src="http://1111hui.com/js/polyfill.js"></script>
+    <script type="text/javascript" src="http://1111hui.com/js/mithril.js"></script>
+    <title></title>
+    <style type="text/css">
+    body {
+    font-family: Menlo, Consolas, monospace;
+    color: #444;
+}
+.item {
+    cursor: pointer;
+}
+.bold {
+    font-weight: bold;
+}
+ul {
+    padding-left: 1.5em;
+    line-height: 1.5em;
+    list-style-type: dot;
+}
+
 body{
     background: #fff;
 }
@@ -22,26 +38,26 @@ body{
 }
 .selected>span,
 .selected>pre
-{
-    color:red;
-}
+ {
+     color:red;
+ }
 .moving>span,
 .moving>pre
-{
-    color:purple;
-    opacity: 0.5;
-    font-style: italic;
-}
+ {
+     color:purple;
+     opacity: 0.5;
+     font-style: italic;
+ }
 .copying>span,
 .copying>pre
-{
-    color:purple;
-    opacity: 0.5;
-}
-</style>
-</head>
-<body class="normal">
+ {
+     color:purple;
+     opacity: 0.5;
+ }
+    </style>
+  </head>
+  <body class="normal">
 
-</body>
+  </body>
 </html>
 <script type="text/javascript" src="dist/tree.js"></script>
