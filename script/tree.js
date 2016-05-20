@@ -294,6 +294,9 @@ var com = {
                 e.stopPropagation()
                 selected = {node: v, idx: idx, parent: parent}
 
+                // save parent _pos when select node
+                if(parent) parent._pos = idx
+
                 if (isInputActive(e.target)) return
                 else if (v._edit) {
                   v._edit = false
