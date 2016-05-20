@@ -55,7 +55,7 @@
 	 _static          {boolean} whether folder expand on mousemove
 	 _close           {boolean} true : folder close, false : folder open
 	 _edit            {boolean} true  : node text edit status, false : node text display status
-	 _leaf [auto]     {boolean} true  : Leaf node, false : Folder node
+	 _leaf [auto]     {boolean} true  : Leaf node, false : Trunk node
 	 _path [readOnly] {string}  object path from root
 	 _idx  [readOnly] {number}  index in parent node
 	 children         {array}   node type of children; null denotes _leaf node
@@ -280,7 +280,8 @@
 	     */
 	    function interTree(arr, parent, path) {
 	      path = path || [];
-	      return !arr ? [] : { tag: 'ul', attrs: {}, children: arr.map(function (v, idx) {
+	      return !arr ? [] : {
+	        tag: 'ul', attrs: {}, children: arr.map(function (v, idx) {
 	          v._path = path.concat(idx);
 	          v = typeof v == 'string' ? { text: v } : v;
 	          if ({}.toString.call(v) != '[object Object]') return v;
@@ -292,6 +293,8 @@
 	              onmousedown: function onmousedown(e) {
 	                e.stopPropagation();
 	                if (isInputActive(e.target)) return;
+	                if (detectLeftButton(e)) mouseGuesture.push(1);
+	                if (detectRightButton(e)) mouseGuesture.push(2);
 	                e.preventDefault();
 	                var isDown = e.type == 'mousedown';
 	                // add node
@@ -340,49 +343,46 @@
 	      return interTree(data);
 	    };
 	    ctrl.onunload = function (e) {
-	      Mousetrap.unbind('ctrl+x');
-	      Mousetrap.unbind('ctrl+c');
-	      Mousetrap.unbind('ctrl+v');
-	      Mousetrap.unbind('ctrl+z');
-	      Mousetrap.unbind('del');
+	      for (var k in keyMap) {
+	        Mousetrap.unbind(k);
+	      }
 	    };
 
 	    //
 	    // Mousetrap definition
-	    Mousetrap.bind('del', function (e) {
+	    function doDelete(e) {
 	      deleteNode(selected.parent, selected.idx);
 	      m.redraw();
-	    });
-	    Mousetrap.bind('ctrl+enter', function (e) {
+	    }
+	    function doAddChildLeaf(e) {
 	      addChildNode(selected.node, true, true);
 	      m.redraw();
-	    });
-	    Mousetrap.bind('shift+enter', function (e) {
+	    }
+	    function doAddChildTrunk(e) {
 	      addChildNode(selected.node, true);
 	      m.redraw();
-	    });
-	    Mousetrap.bind('enter', function (e) {
+	    }
+	    function doAddNode(e) {
 	      addNode(selected.parent, selected.idx, true);
 	      m.redraw();
-	    });
-	    Mousetrap.bind('ctrl+z', function (e) {
+	    }
+	    function doUndo(e) {
 	      if (isInputActive()) return;
 	      var undo = undoList.pop();
 	      if (undo) undo();
 	      m.redraw(true);
-	    });
-	    Mousetrap.bind('ctrl+x', function (e) {
+	    }
+	    function doMove(e) {
 	      if (!selected.parent) return;
 	      target = Object.assign({ type: 'moving' }, selected);
 	      m.redraw();
-	    });
-	    Mousetrap.bind('ctrl+c', function (e) {
+	    }
+
+	    function doCopy(e) {
 	      if (!selected.parent) return;
 	      target = Object.assign({ type: 'copying' }, selected);
 	      m.redraw();
-	    });
-
-	    Mousetrap.bind(['ctrl+v', 'ctrl+shift+v'], doMoveCopy);
+	    }
 	    function doMoveCopy(e) {
 	      var isChild = !e.shiftKey;
 	      if (!target || !selected || !target.parent || !selected.parent) return;
@@ -408,6 +408,22 @@
 	        }
 	      }
 	      m.redraw();
+	    }
+
+	    var keyMap = {
+	      'del': doDelete,
+	      'ctrl+enter': doAddChildLeaf,
+	      'shift+enter': doAddChildTrunk,
+	      'enter': doAddNode,
+	      'ctrl+z': doUndo,
+	      'ctrl+c': doCopy,
+	      'ctrl+x': doMove,
+	      'ctrl+shift+v': doMoveCopy,
+	      'ctrl+v': doMoveCopy
+	    };
+
+	    for (var k in keyMap) {
+	      Mousetrap.bind(k, keyMap[k]);
 	    }
 	  },
 

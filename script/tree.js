@@ -7,7 +7,7 @@
  _static          {boolean} whether folder expand on mousemove
  _close           {boolean} true : folder close, false : folder open
  _edit            {boolean} true  : node text edit status, false : node text display status
- _leaf [auto]     {boolean} true  : Leaf node, false : Folder node
+ _leaf [auto]     {boolean} true  : Leaf node, false : Trunk node
  _path [readOnly] {string}  object path from root
  _idx  [readOnly] {number}  index in parent node
  children         {array}   node type of children; null denotes _leaf node
@@ -241,115 +241,115 @@ var com = {
      */
     function interTree (arr, parent, path) {
       path = path || []
-      return !arr ? [] : {tag: 'ul', attrs: {}, children: arr.map((v, idx) => {
-        v._path = path.concat(idx)
-        v = typeof v == 'string' ? {text: v} : v
-        if ({}.toString.call(v) != '[object Object]') return v
-        return {
-          tag: 'li',
-          attrs: _extend({
-            class: getClass(v),
-            config: (el, old, context) => {
-            },
-            onmousedown: function (e) {
-              e.stopPropagation()
-              if (isInputActive(e.target)) return
-              e.preventDefault()
-              var isDown = e.type == 'mousedown'
-              // add node
-              if (isDown && e.ctrlKey) {
-                // add node before selected
-                if (e.altKey) addChildNode(v)
-                // add child node as first child
-                else addNode(parent, idx)
-                return
-              }
-              // remove node
-              if (isDown && e.altKey) {
-                deleteNode(parent, idx)
-                return
-              }
-              // else if(v._edit) return v._edit = false
-              // close / open node
-              if (!v._static && v.children) v._close = e.type == 'mousemove' ? false : !v._close
-              selected = {node: v, idx: idx, parent: parent}
-            },
-            onmousemove: function (e) {
-              if (!detectLeftButton(e))return
-              this.onmousedown(e)
-            },
-            // dbl click to edit
-            ondblclick: function (e) {
-              e.stopPropagation()
-              v._edit = true
-              var oldVal = v.text
-              undoList.push(function () {
-                setTimeout(_ => {
-                  v.text = oldVal
-                  v._edit = false
-                  m.redraw()
+      return !arr ? [] : {
+        tag: 'ul', attrs: {}, children: arr.map((v, idx) => {
+          v._path = path.concat(idx)
+          v = typeof v == 'string' ? {text: v} : v
+          if ({}.toString.call(v) != '[object Object]') return v
+          return {
+            tag: 'li',
+            attrs: _extend({
+              class: getClass(v),
+              config: (el, old, context) => {
+              },
+              onmousedown: function (e) {
+                e.stopPropagation()
+                if (isInputActive(e.target)) return
+                if (detectLeftButton(e)) mouseGuesture.push(1)
+                if (detectRightButton(e)) mouseGuesture.push(2)
+                e.preventDefault()
+                var isDown = e.type == 'mousedown'
+                // add node
+                if (isDown && e.ctrlKey) {
+                  // add node before selected
+                  if (e.altKey) addChildNode(v)
+                  // add child node as first child
+                  else addNode(parent, idx)
+                  return
+                }
+                // remove node
+                if (isDown && e.altKey) {
+                  deleteNode(parent, idx)
+                  return
+                }
+                // else if(v._edit) return v._edit = false
+                // close / open node
+                if (!v._static && v.children) v._close = e.type == 'mousemove' ? false : !v._close
+                selected = {node: v, idx: idx, parent: parent}
+              },
+              onmousemove: function (e) {
+                if (!detectLeftButton(e))return
+                this.onmousedown(e)
+              },
+              // dbl click to edit
+              ondblclick: function (e) {
+                e.stopPropagation()
+                v._edit = true
+                var oldVal = v.text
+                undoList.push(function () {
+                  setTimeout(_ => {
+                    v.text = oldVal
+                    v._edit = false
+                    m.redraw()
+                  })
                 })
-              })
-            },
-          }, v),
-          children: [
-            v.children ? m('a', v._close ? '+ ' : '- ') : [],
-            v._edit
-              ? getInput(v)
-              : m(v._leaf ? 'pre' : 'span', v.text)
-          ].concat(v._close ? [] : interTree(v.children, v, path.concat(idx)))
-        }
-      })
-                         }
+              },
+            }, v),
+            children: [
+              v.children ? m('a', v._close ? '+ ' : '- ') : [],
+              v._edit
+                ? getInput(v)
+                : m(v._leaf ? 'pre' : 'span', v.text)
+            ].concat(v._close ? [] : interTree(v.children, v, path.concat(idx)))
+          }
+        })
+      }
     }
 
     ctrl.getDom = _ => {
       return interTree(data)
     }
     ctrl.onunload = e => {
-      Mousetrap.unbind('ctrl+x')
-      Mousetrap.unbind('ctrl+c')
-      Mousetrap.unbind('ctrl+v')
-      Mousetrap.unbind('ctrl+z')
-      Mousetrap.unbind('del')
+      for (var k in keyMap) {
+        Mousetrap.unbind(k)
+      }
     }
 
     //
     // Mousetrap definition
-    Mousetrap.bind('del', function (e) {
+    function doDelete (e) {
       deleteNode(selected.parent, selected.idx)
       m.redraw()
-    })
-    Mousetrap.bind('ctrl+enter', function (e) {
+    }
+    function doAddChildLeaf (e) {
       addChildNode(selected.node, true, true)
       m.redraw()
-    })
-    Mousetrap.bind('shift+enter', function (e) {
+    }
+    function doAddChildTrunk (e) {
       addChildNode(selected.node, true)
       m.redraw()
-    })
-    Mousetrap.bind('enter', function (e) {
+    }
+    function doAddNode (e) {
       addNode(selected.parent, selected.idx, true)
       m.redraw()
-    })
-    Mousetrap.bind('ctrl+z', function (e) {
+    }
+    function doUndo (e) {
       if (isInputActive()) return
       var undo = undoList.pop()
       if (undo) undo()
       m.redraw(true)
-    })
-    Mousetrap.bind('ctrl+x', function (e) {
+    }
+    function doMove (e) {
       if (!selected.parent) return
       target = Object.assign({type: 'moving'}, selected)
       m.redraw()
-    })
-    Mousetrap.bind('ctrl+c', function (e) {
+    }
+
+    function doCopy (e) {
       if (!selected.parent) return
       target = Object.assign({type: 'copying'}, selected)
       m.redraw()
-    })
-
-    Mousetrap.bind(['ctrl+v', 'ctrl+shift+v'], doMoveCopy)
+    }
     function doMoveCopy (e) {
       var isChild = !e.shiftKey
       if (!target || !selected || !target.parent || !selected.parent) return
@@ -375,6 +375,22 @@ var com = {
         }
       }
       m.redraw()
+    }
+
+    var keyMap = {
+      'del': doDelete,
+      'ctrl+enter': doAddChildLeaf,
+      'shift+enter': doAddChildTrunk,
+      'enter': doAddNode,
+      'ctrl+z': doUndo,
+      'ctrl+c': doCopy,
+      'ctrl+x': doMove,
+      'ctrl+shift+v': doMoveCopy,
+      'ctrl+v': doMoveCopy
+    }
+
+    for (var k in keyMap) {
+      Mousetrap.bind(k, keyMap[k])
     }
   },
 
