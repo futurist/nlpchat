@@ -47,6 +47,7 @@ var data = [{
     {text: 'B'},
   ]
 }]
+// window.data = data
 
 //
 // ========================================
@@ -56,6 +57,28 @@ var data = [{
 // disable right click
 window.oncontextmenu = function () {
   return false
+}
+
+// better type check
+var type = {}.toString
+var OBJECT = '[object Object]'
+var ARRAY = '[object Array]'
+
+/**
+ * Array get last element
+ */
+if (!Array.prototype.last) {
+  Array.prototype.last = function () {
+    return this[this.length - 1]
+  }
+}
+
+function getArrayPath (arr, path) {
+  var obj = arr
+  for (var i = 0; i < path.length; i++) {
+    obj = type.call(obj)===ARRAY ? obj[path[i]] : obj && obj.children && obj.children[path[i]]
+  }
+  return obj
 }
 
 /**
@@ -347,25 +370,51 @@ var com = {
 
     //
     // Mousetrap definition
+    function keyMoveLevel (e, key) {
+      var child, sel=selected, newIdx, newParent
+      if(sel){
+        e.preventDefault()
+        newParent = sel.parent
+        child = sel.node.children
+        if(/left/.test(key) && newParent){
+          selected.node = newParent
+          selected.idx = newParent._path.last()
+          // _path is data[0][2]... if there's only data[0], then it's first root, parent is null
+          selected.parent = newParent._path.length>1 ? getArrayPath(data, newParent._path.slice(0,-1) ) : null
+          m.redraw()
+        }
+        console.log(sel.node._path)
+        if(/right/.test(key) && child && child.length){
+          selected.node = child[0]
+          selected.idx = 0
+          selected.parent = getArrayPath(data, sel.node._path.slice(0, -1))
+          selected.node._close = false
+          m.redraw()
+        }
+      }
+    }
     function keyMoveSibling (e, key) {
       var child, sel = selected, newIdx
-      var moveSibling = function () {
-        ;[child[newIdx], child[sel.idx]] = [child[sel.idx], child[newIdx]]
+
+      var moveSibling = function (isMove) {
+        if(isMove) [child[newIdx], child[sel.idx]] = [child[sel.idx], child[newIdx]]
         selected.node = child[newIdx]
         selected.idx = newIdx
         m.redraw()
       }
+
       if (sel) {
+        e.preventDefault()
         if (!sel.parent) child = data
         else child = sel.parent.children
         if ( child.length) {
           if (/down$/.test(key) && sel.idx + 1 < child.length) {
             newIdx = sel.idx + 1
-            moveSibling()
+            moveSibling( /ctrl/.test(key) )
           }
           if (/up$/.test(key) && sel.idx - 1 >= 0) {
             newIdx = sel.idx - 1
-            moveSibling()
+            moveSibling( /ctrl/.test(key) )
           }
         }
       }
@@ -442,6 +491,10 @@ var com = {
     }
 
     var keyMap = {
+      'left': keyMoveLevel,
+      'right': keyMoveLevel,
+      'up': keyMoveSibling,
+      'down': keyMoveSibling,
       'ctrl+up': keyMoveSibling,
       'ctrl+down': keyMoveSibling,
       'esc': clearGuesture,
