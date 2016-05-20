@@ -82,6 +82,12 @@
 	// ========================================
 	// Helper Function
 	// ========================================
+
+	// disable right click
+	window.oncontextmenu = function () {
+	  return false;
+	};
+
 	/**
 	 * isInputactive - check whether user is editing
 	 * @returns {boolean}
@@ -290,11 +296,35 @@
 	            attrs: _extend({
 	              class: getClass(v),
 	              config: function config(el, old, context) {},
+	              onmouseup: function onmouseup(e) {},
 	              onmousedown: function onmousedown(e) {
 	                e.stopPropagation();
-	                if (isInputActive(e.target)) return;
-	                if (detectLeftButton(e)) mouseGuesture.push(1);
-	                if (detectRightButton(e)) mouseGuesture.push(2);
+	                selected = { node: v, idx: idx, parent: parent };
+
+	                if (isInputActive(e.target)) return;else if (v._edit) {
+	                  v._edit = false;
+	                  return;
+	                }
+
+	                // Right then Right, do move/copy action
+	                if (detectRightButton(e)) addGuesture('right');
+	                if (mouseGuesture.join(',') === 'right,right') {
+	                  clearGuesture(e);
+	                  doMoveCopy(e);
+	                }
+
+	                // buttons=Left+Right, button=Right, Left and Right
+	                if (e.buttons == 3 && e.button == 2) {
+	                  clearGuesture(e);
+	                  doCopy(e);
+	                }
+
+	                // buttons=Left+Right, button=Left, Right and Left
+	                if (e.buttons == 3 && e.button == 0) {
+	                  clearGuesture(e);
+	                  doMove(e);
+	                }
+
 	                e.preventDefault();
 	                var isDown = e.type == 'mousedown';
 	                // add node
@@ -313,7 +343,6 @@
 	                // else if(v._edit) return v._edit = false
 	                // close / open node
 	                if (!v._static && v.children) v._close = e.type == 'mousemove' ? false : !v._close;
-	                selected = { node: v, idx: idx, parent: parent };
 	              },
 	              onmousemove: function onmousemove(e) {
 	                if (!detectLeftButton(e)) return;
@@ -410,7 +439,19 @@
 	      m.redraw();
 	    }
 
+	    function addGuesture(action) {
+	      mouseGuesture.push(action);
+	      setTimeout(function () {
+	        clearGuesture();
+	      }, 800);
+	    }
+
+	    function clearGuesture(e) {
+	      mouseGuesture = [];
+	    }
+
 	    var keyMap = {
+	      'esc': clearGuesture,
 	      'del': doDelete,
 	      'ctrl+enter': doAddChildLeaf,
 	      'shift+enter': doAddChildTrunk,
