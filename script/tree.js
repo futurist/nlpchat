@@ -264,7 +264,7 @@ var com = {
                 selected = {node: v, idx: idx, parent: parent}
 
                 if (isInputActive(e.target)) return
-                else if(v._edit){
+                else if (v._edit) {
                   v._edit = false
                   return
                 }
@@ -347,6 +347,29 @@ var com = {
 
     //
     // Mousetrap definition
+    function keyMoveSibling (e, key) {
+      var child, sel = selected, newIdx
+      var moveSibling = function () {
+        ;[child[newIdx], child[sel.idx]] = [child[sel.idx], child[newIdx]]
+        selected.node = child[newIdx]
+        selected.idx = newIdx
+        m.redraw()
+      }
+      if (sel) {
+        if (!sel.parent) child = data
+        else child = sel.parent.children
+        if ( child.length) {
+          if (/down$/.test(key) && sel.idx + 1 < child.length) {
+            newIdx = sel.idx + 1
+            moveSibling()
+          }
+          if (/up$/.test(key) && sel.idx - 1 >= 0) {
+            newIdx = sel.idx - 1
+            moveSibling()
+          }
+        }
+      }
+    }
     function doDelete (e) {
       deleteNode(selected.parent, selected.idx)
       m.redraw()
@@ -409,7 +432,7 @@ var com = {
 
     function addGuesture (action) {
       mouseGuesture.push(action)
-      setTimeout(function(){
+      setTimeout(function () {
         clearGuesture()
       }, 800)
     }
@@ -419,6 +442,8 @@ var com = {
     }
 
     var keyMap = {
+      'ctrl+up': keyMoveSibling,
+      'ctrl+down': keyMoveSibling,
       'esc': clearGuesture,
       'del': doDelete,
       'ctrl+enter': doAddChildLeaf,

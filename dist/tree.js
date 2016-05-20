@@ -379,6 +379,33 @@
 
 	    //
 	    // Mousetrap definition
+	    function keyMoveSibling(e, key) {
+	      var child,
+	          sel = selected,
+	          newIdx;
+	      var moveSibling = function moveSibling() {
+	        ;var _ref = [child[sel.idx], child[newIdx]];
+	        child[newIdx] = _ref[0];
+	        child[sel.idx] = _ref[1];
+
+	        selected.node = child[newIdx];
+	        selected.idx = newIdx;
+	        m.redraw();
+	      };
+	      if (sel) {
+	        if (!sel.parent) child = data;else child = sel.parent.children;
+	        if (child.length) {
+	          if (/down$/.test(key) && sel.idx + 1 < child.length) {
+	            newIdx = sel.idx + 1;
+	            moveSibling();
+	          }
+	          if (/up$/.test(key) && sel.idx - 1 >= 0) {
+	            newIdx = sel.idx - 1;
+	            moveSibling();
+	          }
+	        }
+	      }
+	    }
 	    function doDelete(e) {
 	      deleteNode(selected.parent, selected.idx);
 	      m.redraw();
@@ -451,6 +478,8 @@
 	    }
 
 	    var keyMap = {
+	      'ctrl+up': keyMoveSibling,
+	      'ctrl+down': keyMoveSibling,
 	      'esc': clearGuesture,
 	      'del': doDelete,
 	      'ctrl+enter': doAddChildLeaf,
