@@ -103,6 +103,14 @@
 	  };
 	}
 
+	/**
+	 * getArraypath - get object using path array, from data object
+	 * @param {object} arr - root data object;
+	 *									     if array, get index as target;
+	 *                       if object, get index of object.children as target
+	 * @param {array} path - path to obtain using index array [0,1,0]
+	 * @returns {object} target object at path
+	 */
 	function getArrayPath(arr, path) {
 	  var obj = arr;
 	  for (var i = 0; i < path.length; i++) {
@@ -402,28 +410,41 @@
 
 	    //
 	    // Mousetrap definition
+	    function toggleNodeOpen(e, key) {
+	      var sel = selected;
+	      e.preventDefault();
+	      if (sel && sel.node.children) {
+	        sel.node._close = !sel.node._close;
+	        m.redraw();
+	      }
+	    }
 	    function keyMoveLevel(e, key) {
 	      var child,
 	          sel = selected,
 	          newIdx,
-	          newParent;
+	          newParent,
+	          oldNode;
 	      if (sel) {
 	        e.preventDefault();
 	        newParent = sel.parent;
 	        child = sel.node.children;
 	        if (/left/.test(key) && newParent) {
-	          selected.node = newParent;
-	          selected.idx = newParent._path.last();
+	          newParent._pos = sel.idx;
+	          sel.node = newParent;
+	          sel.idx = newParent._path.last();
 	          // _path is data[0][2]... if there's only data[0], then it's first root, parent is null
-	          selected.parent = newParent._path.length > 1 ? getArrayPath(data, newParent._path.slice(0, -1)) : null;
+	          sel.parent = newParent._path.length > 1 ? getArrayPath(data, newParent._path.slice(0, -1)) : null;
 	          m.redraw();
 	        }
-	        console.log(sel.node._path);
 	        if (/right/.test(key) && child && child.length) {
-	          selected.node = child[0];
-	          selected.idx = 0;
-	          selected.parent = getArrayPath(data, sel.node._path.slice(0, -1));
-	          selected.node._close = false;
+	          // save sel.node ref first to as parent
+	          var _oldNode = sel.node;
+	          var pos = _oldNode._pos || 0;
+	          sel.node = child[pos];
+	          sel.node._path = _oldNode._path.concat(pos);
+	          sel.idx = pos;
+	          sel.parent = _oldNode;
+	          if (_oldNode._close) _oldNode._close = false;
 	          m.redraw();
 	        }
 	      }
@@ -439,8 +460,8 @@
 	          var _ref = [child[sel.idx], child[newIdx]];
 	          child[newIdx] = _ref[0];
 	          child[sel.idx] = _ref[1];
-	        }selected.node = child[newIdx];
-	        selected.idx = newIdx;
+	        }sel.node = child[newIdx];
+	        sel.idx = newIdx;
 	        m.redraw();
 	      };
 
@@ -531,6 +552,7 @@
 	    }
 
 	    var keyMap = {
+	      'space': toggleNodeOpen,
 	      'left': keyMoveLevel,
 	      'right': keyMoveLevel,
 	      'up': keyMoveSibling,
