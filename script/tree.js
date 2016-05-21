@@ -2,6 +2,7 @@
  * DATA format:
  * node -> {
  text             {string}  displayed text for html
+ name             {string}  name for node, if no text, used as text
  class            {string}  className for node
  // font          {string}  the font color
  _static          {boolean} whether folder expand on mousemove
