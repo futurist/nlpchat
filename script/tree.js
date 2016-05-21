@@ -22,7 +22,7 @@ var data = [{
       text: 'A',
       _close: true,
       children: [{
-        text: 'A1',
+        name: 'A1',
         font: 'red',
         children: null
       }, {
@@ -54,15 +54,46 @@ var data = [{
 // Helper Function
 // ========================================
 
-// disable right click
-window.oncontextmenu = function () {
-  return false
-}
-
 // better type check
 var type = {}.toString
 var OBJECT = '[object Object]'
 var ARRAY = '[object Array]'
+
+
+/**
+ * convert simple Object into tree data
+ *
+ format:
+ {"a":{"b":{"c":{"name":"test 1"}}},"e":"test 2", f:null}
+ *        If each value is null,
+ *        or not of type {string|object|array},
+ *        then it's empty leaf
+ *
+ * @param {object} d - simple object data
+ * @returns {object} tree data object
+ */
+function convertSimpleData (d) {
+  if (typeof (d) === 'string') {
+    return {text: d}
+  }
+  if (type.call(d) === ARRAY) {
+    return d.map(function (v) {
+      return {text: v}
+    })
+  }
+  if (type.call(d) === OBJECT) {
+    if('name' in d || 'text' in d) return d
+    return Object.keys(d).map(function (v) {
+      return !v? [] : {text: v, children: convertSimpleData(d[v])}
+    })
+  }
+  return []
+}
+
+// disable right click
+window.oncontextmenu = function () {
+  return false
+}
 
 /**
  * Array get last element
@@ -251,11 +282,11 @@ var com = {
           onkeydown: e => {
             if (e.keyCode == 13 && e.ctrlKey) return v._edit = false
           }
-        }, v.text)
+        }, v.text||v.name)
       } else {
         return m('input', {
           config: el => el.focus(),
-          value: v.text,
+          value: v.text||v.name,
           oninput: function (e) { v.text = this.value; },
           onkeydown: e => {
             if (e.keyCode == 13) return v._edit = false
@@ -349,7 +380,7 @@ var com = {
               ondblclick: function (e) {
                 e.stopPropagation()
                 v._edit = true
-                var oldVal = v.text
+                var oldVal = v.text||v.name
                 undoList.push(function () {
                   setTimeout(_ => {
                     v.text = oldVal
@@ -363,7 +394,7 @@ var com = {
               v.children ? m('a', v._close ? '+ ' : '- ') : [],
               v._edit
                 ? getInput(v)
-                : m(v._leaf ? 'pre' : 'span', v.text)
+                : m(v._leaf ? 'pre' : 'span', v.text||v.name)
             ].concat(v._close ? [] : interTree(v.children, v, path.concat(idx)))
           }
         })
