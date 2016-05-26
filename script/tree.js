@@ -60,7 +60,6 @@ var type = {}.toString
 var OBJECT = '[object Object]'
 var ARRAY = '[object Array]'
 
-
 /**
  * convert simple Object into tree data
  *
@@ -83,9 +82,9 @@ function convertSimpleData (d) {
     })
   }
   if (type.call(d) === OBJECT) {
-    if('name' in d || 'text' in d) return d
+    if ('name' in d || 'text' in d) return d
     return Object.keys(d).map(function (v) {
-      return !v? [] : {text: v, children: convertSimpleData(d[v])}
+      return !v ? [] : {text: v, children: convertSimpleData(d[v])}
     })
   }
   return []
@@ -107,8 +106,8 @@ if (!Array.prototype.last) {
 
 /**
  * getArraypath - get object using path array, from data object
- * @param {object} arr - root data object;
- *									     if array, get index as target;
+ * @param {object} arr - root data object
+ *									     if array, get index as target
  *                       if object, get index of object.children as target
  * @param {array} path - path to obtain using index array [0,1,0]
  * @returns {object} target object at path
@@ -116,7 +115,7 @@ if (!Array.prototype.last) {
 function getArrayPath (arr, path) {
   var obj = arr
   for (var i = 0; i < path.length; i++) {
-    obj = type.call(obj)===ARRAY ? obj[path[i]] : obj && obj.children && obj.children[path[i]]
+    obj = type.call(obj) === ARRAY ? obj[path[i]] : obj && obj.children && obj.children[path[i]]
   }
   return obj
 }
@@ -151,6 +150,10 @@ function detectRightButton (e) {
   return rightclick
 }
 
+function _clone (dest) {
+  return JSON.parse(JSON.stringify(dest))
+}
+
 var com = {
   //
   // controller
@@ -171,13 +174,10 @@ var com = {
     var undoList = []
     // Mouse guesture store array
     var mouseGuesture = []
-    function _clone (dest) {
-      return JSON.parse(JSON.stringify(dest))
-    }
+
     /**
      * Extend tree object, ignore _, text, children attr
      * If there's already has className in src, merge className by SPC
-
      * @param {} dest - new node to merged to, from src
      * @param {} src - tree object
      * @returns {} dest
@@ -188,6 +188,10 @@ var com = {
         .forEach(k => {
             /class|className/.test(k) ? (dest[k] = dest[k] || '', dest[k] += ' ' + src[k]) : dest[k] = src[k]})
       return dest
+    }
+
+    function getText(v) {
+      return 'text' in v? v.text : v.name||''
     }
 
     /**
@@ -283,11 +287,13 @@ var com = {
           onkeydown: e => {
             if (e.keyCode == 13 && e.ctrlKey) return v._edit = false
           }
-        }, v.text||v.name)
+        }, getText(v))
       } else {
         return m('input', {
-          config: el => el.focus(),
-          value: v.text||v.name,
+          config: el => {
+            el.focus()
+          },
+          value: getText(v),
           oninput: function (e) { v.text = this.value; },
           onkeydown: e => {
             if (e.keyCode == 13) return v._edit = false
@@ -327,7 +333,7 @@ var com = {
                 selected = {node: v, idx: idx, parent: parent}
 
                 // save parent _pos when select node
-                if(parent) parent._pos = idx
+                if (parent) parent._pos = idx
 
                 if (isInputActive(e.target)) return
                 else if (v._edit) {
@@ -381,7 +387,7 @@ var com = {
               ondblclick: function (e) {
                 e.stopPropagation()
                 v._edit = true
-                var oldVal = v.text||v.name
+                var oldVal = getText(v)
                 undoList.push(function () {
                   setTimeout(_ => {
                     v.text = oldVal
@@ -395,7 +401,7 @@ var com = {
               v.children ? m('a', v._close ? '+ ' : '- ') : [],
               v._edit
                 ? getInput(v)
-                : m(v._leaf ? 'pre' : 'span', v.text||v.name)
+                : m(v._leaf ? 'pre' : 'span', getText(v))
             ].concat(v._close ? [] : interTree(v.children, v, path.concat(idx)))
           }
         })
@@ -422,20 +428,20 @@ var com = {
       }
     }
     function keyMoveLevel (e, key) {
-      var child, sel=selected, newIdx, newParent, oldNode
-      if(sel){
+      var child, sel = selected, newIdx, newParent, oldNode
+      if (sel) {
         e.preventDefault()
         newParent = sel.parent
         child = sel.node.children
-        if(/left/.test(key) && newParent){
+        if (/left/.test(key) && newParent) {
           newParent._pos = sel.idx
           sel.node = newParent
           sel.idx = newParent._path.last()
           // _path is data[0][2]... if there's only data[0], then it's first root, parent is null
-          sel.parent = newParent._path.length>1 ? getArrayPath(data, newParent._path.slice(0,-1) ) : null
+          sel.parent = newParent._path.length > 1 ? getArrayPath(data, newParent._path.slice(0, -1)) : null
           m.redraw()
         }
-        if(/right/.test(key) && child && child.length) {
+        if (/right/.test(key) && child && child.length) {
           // save sel.node ref first to as parent
           const oldNode = sel.node
           const pos = oldNode._pos || 0
@@ -452,7 +458,7 @@ var com = {
       var child, sel = selected, newIdx
 
       var moveSibling = function (isMove) {
-        if(isMove) [child[newIdx], child[sel.idx]] = [child[sel.idx], child[newIdx]]
+        if (isMove) [child[newIdx], child[sel.idx]] = [child[sel.idx], child[newIdx]]
         sel.node = child[newIdx]
         sel.idx = newIdx
         m.redraw()
@@ -462,14 +468,14 @@ var com = {
         e.preventDefault()
         if (!sel.parent) child = data
         else child = sel.parent.children
-        if ( child.length) {
+        if (child.length) {
           if (/down$/.test(key) && sel.idx + 1 < child.length) {
             newIdx = sel.idx + 1
-            moveSibling( /ctrl/.test(key) )
+            moveSibling(/ctrl/.test(key))
           }
           if (/up$/.test(key) && sel.idx - 1 >= 0) {
             newIdx = sel.idx - 1
-            moveSibling( /ctrl/.test(key) )
+            moveSibling(/ctrl/.test(key))
           }
         }
       }
@@ -573,11 +579,11 @@ var com = {
   //
   // view
   view: function (ctrl) {
-    return m('.tree1', ctrl.getDom())
+    return m('.mtree', ctrl.getDom())
   }
 }
 
-m.mount(document.body, m.component(com, {data: data}))
+m.mount(document.querySelector('#mtree'), m.component(com, {data: data}))
 
 // below line will remove -webkit-user-select:none
 // which cause phantomjs input cannot be selected!!!!!

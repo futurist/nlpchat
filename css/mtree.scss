@@ -1,0 +1,21 @@
+.mtree{
+    color:red;
+    font:{
+        family:'good';
+        size:'12px'
+    }
+
+    li {
+        cursor:default;
+    }
+}
+
+
+.error {
+    border: 1px #f00;
+    background-color: #fdd;
+}
+.seriousError {
+    @extend .error;
+    border-width: 3px;
+}

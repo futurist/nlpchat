@@ -50,6 +50,7 @@
 	 * DATA format:
 	 * node -> {
 	 text             {string}  displayed text for html
+	 name             {string}  name for node, if no text, used as text
 	 class            {string}  className for node
 	 // font          {string}  the font color
 	 _static          {boolean} whether folder expand on mousemove
@@ -69,7 +70,7 @@
 	    text: 'A',
 	    _close: true,
 	    children: [{
-	      text: 'A1',
+	      name: 'A1',
 	      font: 'red',
 	      children: null
 	    }, {
@@ -84,15 +85,45 @@
 	// Helper Function
 	// ========================================
 
-	// disable right click
-	window.oncontextmenu = function () {
-	  return false;
-	};
-
 	// better type check
 	var type = {}.toString;
 	var OBJECT = '[object Object]';
 	var ARRAY = '[object Array]';
+
+	/**
+	 * convert simple Object into tree data
+	 *
+	 format:
+	 {"a":{"b":{"c":{"name":"test 1"}}},"e":"test 2", f:null}
+	 *        If each value is null,
+	 *        or not of type {string|object|array},
+	 *        then it's empty leaf
+	 *
+	 * @param {object} d - simple object data
+	 * @returns {object} tree data object
+	 */
+	function convertSimpleData(d) {
+	  if (typeof d === 'string') {
+	    return { text: d };
+	  }
+	  if (type.call(d) === ARRAY) {
+	    return d.map(function (v) {
+	      return { text: v };
+	    });
+	  }
+	  if (type.call(d) === OBJECT) {
+	    if ('name' in d || 'text' in d) return d;
+	    return Object.keys(d).map(function (v) {
+	      return !v ? [] : { text: v, children: convertSimpleData(d[v]) };
+	    });
+	  }
+	  return [];
+	}
+
+	// disable right click
+	window.oncontextmenu = function () {
+	  return false;
+	};
 
 	/**
 	 * Array get last element
@@ -105,8 +136,8 @@
 
 	/**
 	 * getArraypath - get object using path array, from data object
-	 * @param {object} arr - root data object;
-	 *									     if array, get index as target;
+	 * @param {object} arr - root data object
+	 *									     if array, get index as target
 	 *                       if object, get index of object.children as target
 	 * @param {array} path - path to obtain using index array [0,1,0]
 	 * @returns {object} target object at path
@@ -149,6 +180,10 @@
 	  return rightclick;
 	}
 
+	function _clone(dest) {
+	  return JSON.parse(JSON.stringify(dest));
+	}
+
 	var com = {
 	  //
 	  // controller
@@ -169,13 +204,11 @@
 	    var undoList = [];
 	    // Mouse guesture store array
 	    var mouseGuesture = [];
-	    function _clone(dest) {
-	      return JSON.parse(JSON.stringify(dest));
-	    }
+
 	    /**
 	     * Extend tree object, ignore _, text, children attr
 	     * If there's already has className in src, merge className by SPC
-	      * @param {} dest - new node to merged to, from src
+	     * @param {} dest - new node to merged to, from src
 	     * @param {} src - tree object
 	     * @returns {} dest
 	     */
@@ -186,6 +219,10 @@
 	        /class|className/.test(k) ? (dest[k] = dest[k] || '', dest[k] += ' ' + src[k]) : dest[k] = src[k];
 	      });
 	      return dest;
+	    }
+
+	    function getText(v) {
+	      return 'text' in v ? v.text : v.name || '';
 	    }
 
 	    /**
@@ -286,13 +323,13 @@
 	          onkeydown: function onkeydown(e) {
 	            if (e.keyCode == 13 && e.ctrlKey) return v._edit = false;
 	          }
-	        }, v.text);
+	        }, getText(v));
 	      } else {
 	        return m('input', {
 	          config: function config(el) {
-	            return el.focus();
+	            el.focus();
 	          },
-	          value: v.text,
+	          value: getText(v),
 	          oninput: function oninput(e) {
 	            v.text = this.value;
 	          },
@@ -386,7 +423,7 @@
 	              ondblclick: function ondblclick(e) {
 	                e.stopPropagation();
 	                v._edit = true;
-	                var oldVal = v.text;
+	                var oldVal = getText(v);
 	                undoList.push(function () {
 	                  setTimeout(function (_) {
 	                    v.text = oldVal;
@@ -396,7 +433,7 @@
 	                });
 	              }
 	            }, v),
-	            children: [v.children ? m('a', v._close ? '+ ' : '- ') : [], v._edit ? getInput(v) : m(v._leaf ? 'pre' : 'span', v.text)].concat(v._close ? [] : interTree(v.children, v, path.concat(idx)))
+	            children: [v.children ? m('a', v._close ? '+ ' : '- ') : [], v._edit ? getInput(v) : m(v._leaf ? 'pre' : 'span', getText(v))].concat(v._close ? [] : interTree(v.children, v, path.concat(idx)))
 	          };
 	        })
 	      };
@@ -582,11 +619,11 @@
 	  //
 	  // view
 	  view: function view(ctrl) {
-	    return m('.tree1', ctrl.getDom());
+	    return m('.mtree', ctrl.getDom());
 	  }
 	};
 
-	m.mount(document.body, m.component(com, { data: data }));
+	m.mount(document.querySelector('#mtree'), m.component(com, { data: data }));
 
 	// below line will remove -webkit-user-select:none
 	// which cause phantomjs input cannot be selected!!!!!

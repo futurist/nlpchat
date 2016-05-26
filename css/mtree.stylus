@@ -1,0 +1,43 @@
+c_sel = red
+c_move = purple
+
+vendor(prop, args)
+  -webkit-{prop} args
+  -moz-{prop} args
+  {prop} args
+
+user-select(args)
+  -webkit-user-select args
+  user-select args
+
+
+body
+  &.noselect
+    .mtree
+      *
+        user-select none
+
+.mtree
+  li
+    cursor default
+
+    &>span
+      display inline-block
+
+  .selected
+    &>span
+    &>pre
+      color c_sel
+
+  .moving
+    &>span
+    &>pre
+      color c_move
+      opacity 0.5
+      font-style italic
+
+  .copying
+    &>span
+    &>pre
+      color c_move
+      opacity 0.5

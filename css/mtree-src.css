@@ -1,0 +1,28 @@
+body.noselect .mtree *{
+    -webkit-user-select:none;
+    user-select:none;
+}
+.mtree li{
+    cursor: default;
+}
+.mtree li>span{
+    display: inline-block;
+}
+.mtree .selected>span,
+.mtree .selected>pre
+ {
+     color:red;
+ }
+.mtree .moving>span,
+.mtree .moving>pre
+ {
+     color:purple;
+     opacity: 0.5;
+     font-style: italic;
+ }
+.mtree .copying>span,
+.mtree .copying>pre
+ {
+     color:purple;
+     opacity: 0.5;
+ }

@@ -1,0 +1,41 @@
+foo bar baz
+form input
+> a
+  border 1px solid
+  size 12px
+
+textarea
+input
+  li
+    color blue
+  &:hover
+    color red
+  .ie7 &
+    color yellow
+
+.foo
+  size:12px
+  &_bar
+    bar 8px
+    &_base
+      base 10px
+      &_dir
+        width 10px
+        ../../:hover
+          width 20px + 5em+10
+          filter unquote('basdf ()^[0] 12345')
+
+
+box-shadow(args...)
+  size args[0]
+  color args[1]
+
+$mg=10px
+#logo
+  size w=12em
+  margin $mg
+  font '%s %s %s' % (w (type(#ccc) is a 'color') (10 is a 'unit'))
+  padding -(w/2)
+  box-shadow 1px 2px 5px #eee
+
+
