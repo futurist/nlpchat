@@ -1,21 +1,26 @@
 c_sel = red
 c_move = purple
 
-vendor(prop, args)
-  -webkit-{prop} args
-  -moz-{prop} args
-  {prop} args
-
 user-select(args)
   -webkit-user-select args
   user-select args
 
 
 body
+  font-family Verdana, Consolas, monospace
+  background #fff
+  color #444
+
   &.noselect
     .mtree
       *
         user-select none
+
+ul
+  padding-left 1.5em
+  line-height 1.5em
+  list-style-type dot
+
 
 .mtree
   li

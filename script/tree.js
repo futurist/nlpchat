@@ -14,41 +14,8 @@
  children         {array}   node type of children; null denotes _leaf node
  }
  */
-var data = [{
-  text: 'root',
-  class: 'asdfas',
-  _static: true,
-  children: [
-    {
-      text: 'A',
-      _close: true,
-      children: [{
-        name: 'A1',
-        font: 'red',
-        children: null
-      }, {
-        text: 'A2'
-      }]
-    },
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-    {text: 'B'},
-  ]
-}]
-// window.data = data
+var data = require('./data.js')
+window.data = data
 
 //
 // ========================================

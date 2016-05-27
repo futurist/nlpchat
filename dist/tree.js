@@ -42,7 +42,7 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -62,23 +62,8 @@
 	 children         {array}   node type of children; null denotes _leaf node
 	 }
 	 */
-	var data = [{
-	  text: 'root',
-	  class: 'asdfas',
-	  _static: true,
-	  children: [{
-	    text: 'A',
-	    _close: true,
-	    children: [{
-	      name: 'A1',
-	      font: 'red',
-	      children: null
-	    }, {
-	      text: 'A2'
-	    }]
-	  }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }]
-	}];
-	// window.data = data
+	var data = __webpack_require__(1);
+	window.data = data;
 
 	//
 	// ========================================
@@ -628,6 +613,29 @@
 	// below line will remove -webkit-user-select:none
 	// which cause phantomjs input cannot be selected!!!!!
 	if (window._phantom) document.body.className = 'phantom';
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = [{
+	  text: 'root',
+	  class: 'asdfas',
+	  _static: true,
+	  children: [{
+	    text: 'A',
+	    _close: true,
+	    children: [{
+	      name: 'A1',
+	      font: 'red',
+	      children: null
+	    }, {
+	      text: 'A2'
+	    }]
+	  }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }, { text: 'B' }]
+	}];
 
 /***/ }
 /******/ ]);

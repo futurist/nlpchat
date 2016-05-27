@@ -1,6 +1,16 @@
+body {
+  font-family: Verdana, Consolas, monospace;
+  background: #fff;
+  color: #444;
+}
 body.noselect .mtree * {
   -webkit-user-select: none;
   user-select: none;
+}
+ul {
+  padding-left: 1.5em;
+  line-height: 1.5em;
+  list-style-type: dot;
 }
 .mtree li {
   cursor: default;
