@@ -11,7 +11,7 @@ body
   background #fff
   color #444
 
-  &.noselect
+  &:global(.noselect)
     .mtree
       *
         user-select none

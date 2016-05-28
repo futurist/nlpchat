@@ -3,8 +3,8 @@ var webpack = require('webpack')
 
 var loaders = [
   {test: /script\/.*\.js$/, loader: 'babel', query: {presets: ['es2015'], cacheDirectory: true}},
-  {test: /\.styl$/, loader: 'css!stylus'},
-  {test: /\.css$/, loader: 'css'},
+  {test: /\.styl$|\.stylus$/, loader: 'style!css?modules!stylus'},
+  {test: /\.css$/, loader: 'style!css'},
   {test: /\.html$/, loader: 'file?name=[name].[ext]'},
 ]
 
@@ -34,6 +34,6 @@ module.exports = {
   module: {
     loaders: loaders
   },
-  // plugins: plugins
+  plugins: plugins
 }
 

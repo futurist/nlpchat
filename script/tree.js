@@ -17,6 +17,8 @@
 var data = require('./data.js')
 window.data = data
 
+var css = require('../css/mtree.stylus')
+console.log(css)
 //
 // ========================================
 // Helper Function
@@ -170,9 +172,9 @@ var com = {
      */
     function getClass (node) {
       var c = ' '
-      c += selected && selected.node === node ? 'selected ' : ''
+      c += selected && selected.node === node ? css.selected + ' ' : ''
       c += ' '
-      c += target && target.node === node ? target.type : ''
+      c += target && target.node === node ? css[target.type] : ''
       return c
     }
 
@@ -546,7 +548,7 @@ var com = {
   //
   // view
   view: function (ctrl) {
-    return m('.mtree', ctrl.getDom())
+    return m('.'+css.mtree, ctrl.getDom())
   }
 }
 
