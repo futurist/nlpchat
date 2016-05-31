@@ -9,8 +9,8 @@ var webpack = require('webpack')
 
 var browsers = {browsers: ['> 1%', 'IE 8']}
 var opacity = function (css, result) {
-  css.walkDecls(function (decl) {
-    if (decl.prop === 'opacity') {
+  css.eachDecl(function (decl) {
+    if (decl.prop === 'opacity' && (!decl.next() || decl.next() && !/Opacity/i.test(decl.next().value))) {
       decl.parent.insertAfter(decl, {
         prop: '-ms-filter',
         value: '"progid:DXImageTransform.Microsoft.Alpha(Opacity=' + (parseFloat(decl.value) * 100) + ')"'
@@ -32,15 +32,20 @@ gulp.task('stylus', function (callback) {
   var cleanCSS = require('gulp-clean-css')
 
   var post = [
-    modules({ scopeBehaviour: 'global' }),
+    modules({
+      // scopeBehaviour: 'local',
+      generateScopedName: function(name, filename, css) {
+        return name
+      }
+    }),
+    opacity,
     cssnext(browsers),
-    opacity
   ]
   return gulp.src(['./css/*.stylus', './css/*.styl'])
     .pipe(sourcemaps.init())
     .pipe(stylus())
     .pipe(postcss(post))
-    .pipe(cleanCSS({compatibility: 'ie8'}))
+    // .pipe(cleanCSS({compatibility: 'ie8'}))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./dist'))
 })

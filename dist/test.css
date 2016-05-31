@@ -1,2 +1,45 @@
->a,foo bar baz,form input{border:1px solid;size:12px}input li,textarea li{color:#00f}input:hover,textarea:hover{color:red}.ie7 input,.ie7 textarea{color:#ff0}.foo{size:12px}.foo_bar{bar:8px}.foo_bar_base{base:10px}.foo_bar_base_dir{width:10px}.foo_bar:hover{width:35px;-webkit-filter:basdf () ^[0] 12345;filter:basdf () ^[0] 12345}#logo{margin:10px;font:12em false true;size:1px;color:2px}
+foo bar baz,
+form input,
+> a {
+  border: 1px solid;
+  size: 12px;
+}
+textarea li,
+input li {
+  color: #00f;
+}
+textarea:hover,
+input:hover {
+  color: #f00;
+}
+.ie7 textarea,
+.ie7 input {
+  color: #ff0;
+}
+.foo {
+  size: 12px;
+}
+.foo_bar {
+  bar: 8px;
+}
+.foo_bar_base {
+  base: 10px;
+}
+.foo_bar_base_dir {
+  width: 10px;
+}
+.foo_bar:hover {
+  width: 35px;
+  -webkit-filter: basdf ()^[0] 12345;
+          filter: basdf ()^[0] 12345;
+}
+#logo {
+  size: 12em;
+  margin: 10px;
+  font: 12em false true;
+  padding: -6em;
+  size: 1px;
+  color: 2px;
+}
+
 /*# sourceMappingURL=test.css.map */
