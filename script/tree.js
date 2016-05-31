@@ -17,8 +17,10 @@
 var data = require('./data.js')
 window.data = data
 
-var css = require('../css/mtree.stylus')
-console.log(css)
+// using webpack inline style, but not for lib
+// var css = require('../css/mtree.stylus')
+var css={}
+
 //
 // ========================================
 // Helper Function
@@ -172,9 +174,9 @@ var com = {
      */
     function getClass (node) {
       var c = ' '
-      c += selected && selected.node === node ? css.selected + ' ' : ''
+      c += selected && selected.node === node ? (css.selected||'selected') + ' ' : ''
       c += ' '
-      c += target && target.node === node ? css[target.type] : ''
+      c += target && target.node === node ? (css[target.type]||target.type) : ''
       return c
     }
 
@@ -293,11 +295,12 @@ var com = {
           return {
             tag: 'li',
             attrs: _extend({
-              class: getClass(v),
+              'class': getClass(v),
               config: (el, old, context) => {
               },
               onmouseup: function (e) {},
               onmousedown: function (e) {
+                if(!e) e=window.event
                 e.stopPropagation()
                 selected = {node: v, idx: idx, parent: parent}
 
@@ -548,7 +551,7 @@ var com = {
   //
   // view
   view: function (ctrl) {
-    return m('.'+css.mtree, ctrl.getDom())
+    return m('.'+(css.mtree||'mtree'), ctrl.getDom())
   }
 }
 

@@ -1,10 +1,5 @@
-c_sel = red
-c_move = purple
-
-user-select(args)
-  -webkit-user-select args
-  user-select args
-
+$CSel = red
+$CMove = purple
 
 body
   font-family Verdana, Consolas, monospace
@@ -32,17 +27,18 @@ ul
   .selected
     &>span
     &>pre
-      color c_sel
+      color $CSel
+      opacity 0.5
 
   .moving
     &>span
     &>pre
-      color c_move
+      color $CMove
       opacity 0.5
       font-style italic
 
   .copying
     &>span
     &>pre
-      color c_move
+      color $CMove
       opacity 0.5

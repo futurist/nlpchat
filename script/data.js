@@ -1,6 +1,6 @@
 module.exports = [{
   text: 'root',
-  class: 'asdfas',
+  'class': 'asdfas',
   _static: true,
   children: [
     {
