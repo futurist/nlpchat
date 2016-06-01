@@ -555,7 +555,10 @@ var com = {
   }
 }
 
-m.mount(document.querySelector('#mtree'), m.component(com, {data: data}))
+export default com
+
+const testRoot= document.querySelector('#mtree')
+if(testRoot) m.mount(testRoot, m.component(com, {data: data}))
 
 // below line will remove -webkit-user-select:none
 // which cause phantomjs input cannot be selected!!!!!

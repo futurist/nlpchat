@@ -46,6 +46,9 @@
 
 	'use strict';
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 	/**
 	 * DATA format:
 	 * node -> {
@@ -613,7 +616,10 @@
 	  }
 	};
 
-	m.mount(document.querySelector('#mtree'), m.component(com, { data: data }));
+	exports['default'] = com;
+
+	var testRoot = document.querySelector('#mtree');
+	if (testRoot) m.mount(testRoot, m.component(com, { data: data }));
 
 	// below line will remove -webkit-user-select:none
 	// which cause phantomjs input cannot be selected!!!!!

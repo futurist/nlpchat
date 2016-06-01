@@ -3,7 +3,7 @@ var webpack = require('webpack')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 var loaders = [
-  {test: /script\/.*\.js$/, loader: 'babel', query: {presets: ['es2015'], cacheDirectory: true}},
+  {test: /script\/.*\.js$/, loader: 'babel', query: {presets: ['es2015'], cacheDirectory: false}},
   {test: /\.styl$|\.stylus$/, loader: 'style!css?modules&sourceMap!stylus?sourceMap'},
   // {test: /\.styl$|\.stylus$/, loader: ExtractTextPlugin.extract('style', 'css?sourceMap!stylus')},
   {test: /\.css$/, loader: 'style!css'},
