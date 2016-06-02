@@ -459,12 +459,20 @@ var com = {
         if (!sel.parent) child = data
         else child = sel.parent.children
         if (child.length) {
-          if (/down$/.test(key) && sel.idx + 1 < child.length) {
-            newIdx = sel.idx + 1
+          if (/down$/.test(key)) {
+            if (sel.idx + 1 < child.length) {
+              newIdx = sel.idx + 1
+            } else {
+              newIdx = 0
+            }
             moveSibling(/ctrl/.test(key))
           }
-          if (/up$/.test(key) && sel.idx - 1 >= 0) {
-            newIdx = sel.idx - 1
+          if (/up$/.test(key)) {
+            if (sel.idx - 1 >= 0) {
+              newIdx = sel.idx - 1
+            } else {
+              newIdx = child.length - 1
+            }
             moveSibling(/ctrl/.test(key))
           }
         }
