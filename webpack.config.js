@@ -3,7 +3,13 @@ var webpack = require('webpack')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 var loaders = [
-  {test: /script\/.*\.js$/, loader: 'babel', query: {presets: ['es2015'], cacheDirectory: false}},
+  {test: /script\/.*\.js$/, loader: 'babel', query: {presets: ['es2015'], plugins:[
+    // Allow function args with commas at end: func( a,b, )
+    'syntax-trailing-function-commas',
+    // es3 member expression: exports['default']=a
+    'transform-es3-member-expression-literals',
+    // es3 property: {'catch': true}
+    'transform-es3-property-literals'], cacheDirectory: false}},
   {test: /\.styl$|\.stylus$/, loader: 'style!css?modules&sourceMap!stylus?sourceMap'},
   // {test: /\.styl$|\.stylus$/, loader: ExtractTextPlugin.extract('style', 'css?sourceMap!stylus')},
   {test: /\.css$/, loader: 'style!css'},

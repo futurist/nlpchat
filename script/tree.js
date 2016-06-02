@@ -138,7 +138,7 @@ var com = {
      parent {object} parent object, or null if it's root
      }
      */
-    var selected = data.length ? {node: data[0], idx: 0, parent: null} : null
+    var selected = data.length ? {node: data[0], idx: 0, parent: null, } : null
     // move or copy target node
     var target = null
     // undoList array for manage undo
@@ -289,7 +289,7 @@ var com = {
       path = path || []
       return !arr ? [] : {
         tag: 'ul', attrs: {}, children: arr.map((v, idx) => {
-          v._path = path.concat(idx)
+          v._path = path.concat(idx, )
           v = typeof v == 'string' ? {text: v} : v
           if ({}.toString.call(v) != '[object Object]') return v
           return {
