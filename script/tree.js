@@ -14,8 +14,8 @@
  children         {array}   node type of children; null denotes _leaf node
  }
  */
-var data = require('./data.js')
-window.data = data
+// var data = require('./data.js')
+// window.data = data
 
 // using webpack inline style, but not for lib
 // var css = require('../css/mtree.stylus')
@@ -36,9 +36,10 @@ var ARRAY = '[object Array]'
  *
  format:
  {"a":{"b":{"c":{"name":"test 1"}}},"e":"test 2", f:null}
+ *        v.name||v.text is a leaf node.
  *        If each value is null,
  *        or not of type {string|object|array},
- *        then it's empty leaf
+ *        then it's empty leaf.
  *
  * @param {object} d - simple object data
  * @returns {object} tree data object
@@ -49,11 +50,14 @@ function convertSimpleData (d) {
   }
   if (type.call(d) === ARRAY) {
     return d.map(function (v) {
-      return {text: v}
+      return convertSimpleData(v)
     })
   }
   if (type.call(d) === OBJECT) {
-    if ('name' in d || 'text' in d) return d
+    if ('name' in d || 'text' in d){
+      d._leaf = true
+      return [d]
+    }
     return Object.keys(d).map(function (v) {
       return !v ? [] : {text: v, children: convertSimpleData(d[v])}
     })
@@ -131,6 +135,14 @@ var com = {
   controller: function (args) {
     var ctrl = this
     var data = args.data || []
+    if(args.url){
+      m.request({method: "GET", url: args.url})
+        .then(function(result) {
+          data= convertSimpleData(result.ptest_data)
+          console.log(data)
+          m.redraw()
+        })
+    }
     /**
      * selected =>{
      node {object} selected node object
@@ -138,7 +150,7 @@ var com = {
      parent {object} parent object, or null if it's root
      }
      */
-    var selected = data.length ? {node: data[0], idx: 0, parent: null, } : null
+    var selected = data.length ? {node: data[0], idx: 0, parent: null} : null
     // move or copy target node
     var target = null
     // undoList array for manage undo
@@ -257,6 +269,12 @@ var com = {
           oninput: function (e) { v.text = this.value; },
           onkeydown: e => {
             if (e.keyCode == 13 && e.ctrlKey) return v._edit = false
+            if (e.keyCode == 27) {
+              var undo = undoList.pop()
+              if (undo) undo()
+              v._edit = false
+              m.redraw()
+            }
           }
         }, getText(v))
       } else {
@@ -289,7 +307,7 @@ var com = {
       path = path || []
       return !arr ? [] : {
         tag: 'ul', attrs: {}, children: arr.map((v, idx) => {
-          v._path = path.concat(idx, )
+          v._path = path.concat(idx)
           v = typeof v == 'string' ? {text: v} : v
           if ({}.toString.call(v) != '[object Object]') return v
           return {
@@ -540,7 +558,7 @@ var com = {
       'ctrl+c': doCopy,
       'ctrl+x': doMove,
       'ctrl+shift+v': doMoveCopy,
-      'ctrl+v': doMoveCopy
+      'ctrl+v': doMoveCopy,
     }
 
     for (var k in keyMap) {

@@ -87,9 +87,10 @@
 	 *
 	 format:
 	 {"a":{"b":{"c":{"name":"test 1"}}},"e":"test 2", f:null}
+	 *        v.name||v.text is a leaf node.
 	 *        If each value is null,
 	 *        or not of type {string|object|array},
-	 *        then it's empty leaf
+	 *        then it's empty leaf.
 	 *
 	 * @param {object} d - simple object data
 	 * @returns {object} tree data object
@@ -104,7 +105,7 @@
 	    });
 	  }
 	  if (type.call(d) === OBJECT) {
-	    if ('name' in d || 'text' in d) return d;
+	    if ('name' in d || 'text' in d) return [d];
 	    return Object.keys(d).map(function (v) {
 	      return !v ? [] : { text: v, children: convertSimpleData(d[v]) };
 	    });
@@ -182,6 +183,13 @@
 	  controller: function controller(args) {
 	    var ctrl = this;
 	    var data = args.data || [];
+	    if (args.url) {
+	      m.request({ method: "GET", url: args.url }).then(function (result) {
+	        data = convertSimpleData(result.ptest_data);
+	        console.log(data);
+	        m.redraw();
+	      });
+	    }
 	    /**
 	     * selected =>{
 	     node {object} selected node object
