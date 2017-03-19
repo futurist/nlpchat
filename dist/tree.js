@@ -98,24 +98,46 @@ var config = {
   storageBucket: 'gs://treeformat.appspot.com'
 };
 firebase.initializeApp(config);
+console.log(firebase.database().ref('/data').once('value', function (e) {
+  return console.log(e);
+}));
+
+var _working;
+
+function working() {
+  return _working;
+}
 
 function saveData(data) {
-  firebase.database().ref('/data').set(data)['catch'](function (e) {
-    console.log(e);
+  _working = true;
+  return firebase.database().ref('/data').set(data).then(function (data) {
+    _working = false;
+    return data;
+  }, function (err) {
+    _working = false;
+    // console.log(err)
+    return new Error(err);
   });
 }
 
 function loadData() {
-  firebase.database().ref('/data').once('value').then(function (data) {
-    console.log(data.val());
+  _working = true;
+  return firebase.database().ref('/data').once('value').then(function (data) {
+    // console.log(data.val())
+    _working = false;
+    return data.val();
+  }, function (err) {
+    _working = false;
+    // console.log(err)
+    return new Error(err);
   });
 }
 
-module.exports = defaultData;
-
-{
-  saveData, loadData;
-}
+module.exports = {
+  saveData: saveData,
+  loadData: loadData,
+  working: working
+};
 
 /***/ }),
 /* 1 */
@@ -128,9 +150,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _data = __webpack_require__(0);
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _data2 = _interopRequireDefault(_data);
+var _data2 = __webpack_require__(0);
+
+var _data3 = _interopRequireDefault(_data2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -199,6 +223,24 @@ function convertSimpleData(d) {
     });
   }
   return [];
+}
+
+function cleanData(data, store) {
+  store = store || [];
+  data.forEach(function (v, i) {
+    if (v && (typeof v === 'undefined' ? 'undefined' : _typeof(v)) == 'object') {
+      var d = {};
+      store.push(d);
+      Object.keys(v).forEach(function (k) {
+        if (['_leaf'].indexOf(k) > -1 || k[0] !== '_' && k !== 'children') d[k] = v[k];
+      });
+      if (v.children && Array.isArray(v.children)) {
+        d.children = [];
+        cleanData(v.children, d.children);
+      }
+    }
+  });
+  return store;
 }
 
 // disable right click
@@ -271,13 +313,6 @@ var com = {
   controller: function controller(args) {
     var ctrl = this;
     var data = args.data || [];
-    if (args.url) {
-      m.request({ method: "GET", url: args.url }).then(function (result) {
-        data = convertSimpleData(result.ptest_data);
-        console.log(data);
-        m.redraw();
-      });
-    }
     /**
      * selected =>{
      node {object} selected node object
@@ -286,6 +321,44 @@ var com = {
      }
      */
     var selected = data.length ? { node: data[0], idx: 0, parent: null } : null;
+
+    if (args.url) {
+      m.request({ method: "GET", url: args.url }).then(function (result) {
+        data = convertSimpleData(result.ptest_data);
+        console.log(data);
+        m.redraw();
+      });
+    }
+    ctrl.saveData = function () {
+      if (!args.saveData || args.working()) return;
+      var theData = { tree: data };
+      if (selected) {
+        theData._selectedPath = selected.node._path;
+      }
+      args.saveData(theData).then(function (result) {
+        // console.log(result)
+        alert('tree saved');
+      });
+    };
+    function getSelFromPath(_path) {
+      var node = getArrayPath(data, _path);
+      var idx = _path.pop();
+      var parent = getArrayPath(data, _path);
+      return { node: node, idx: idx, parent: parent };
+    }
+    ctrl.loadData = function () {
+      if (!args.loadData || args.working()) return;
+      args.loadData().then(function (_data) {
+        data = _data.tree;
+        window.data = data;
+        if (_data._selectedPath) {
+          selected = getSelFromPath(_data._selectedPath);
+        }
+        m.redraw();
+      });
+    };
+    ctrl.loadData();
+
     // move or copy target node
     var target = null;
     // undoList array for manage undo
@@ -463,7 +536,7 @@ var com = {
                 if (!e) e = window.event;
                 e.stopPropagation();
                 selected = { node: v, idx: idx, parent: parent };
-
+                console.log(selected);
                 // save parent _pos when select node
                 if (parent) parent._pos = idx;
 
@@ -721,18 +794,22 @@ var com = {
 
   //
   // view
-  view: function view(ctrl) {
-    return m('.' + (css.mtree || 'mtree'), ctrl.getDom());
+  view: function view(ctrl, args) {
+    return m('.' + (css.mtree || 'mtree'), [m('button', {
+      onclick: ctrl.loadData,
+      style: { opacity: args.working() ? 0.5 : 1 }
+    }, 'Load'), m('button', {
+      onclick: ctrl.saveData,
+      style: { opacity: args.working() ? 0.5 : 1 }
+    }, 'Save'), ctrl.getDom()]);
   }
 };
 
 exports['default'] = com;
 
 
-window.data = _data2['default'];
-
 var testRoot = document.querySelector('#mtree');
-if (testRoot) m.mount(testRoot, m.component(com, { data: _data2['default'] }));
+if (testRoot) m.mount(testRoot, m.component(com, _data3['default']));
 
 // below line will remove -webkit-user-select:none
 // which cause phantomjs input cannot be selected!!!!!

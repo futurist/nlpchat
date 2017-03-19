@@ -42,23 +42,42 @@ var config = {
   storageBucket: 'gs://treeformat.appspot.com'
 };
 firebase.initializeApp(config);
+console.log(firebase.database().ref('/data').once('value', e=>console.log(e)))
+
+var _working
+
+function working (){
+  return _working
+}
 
 function saveData(data){
-  firebase.database().ref('/data').set(data).catch(e=>{
-    console.log(e)
+  _working = true
+  return firebase.database().ref('/data').set(data).then(data=>{
+    _working = false
+    return data
+  }, err=>{
+    _working = false
+    // console.log(err)
+    return new Error(err)
   })
 }
 
 function loadData() {
-  firebase.database().ref('/data').once('value').then(data=>{
-    console.log(data.val())
+  _working = true
+  return firebase.database().ref('/data').once('value').then(data=>{
+    // console.log(data.val())
+    _working = false
+    return data.val()
+  }, err=>{
+    _working = false
+    // console.log(err)
+    return new Error(err)
   })
 }
 
-module.exports = defaultData
-
-{
+module.exports = {
   saveData,
-  loadData
+  loadData,
+  working
 }
 
