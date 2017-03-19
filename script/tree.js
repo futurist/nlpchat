@@ -371,7 +371,7 @@ var com = {
               },
               onmousemove: function (e) {
                 if (!detectLeftButton(e))return
-                this.onmousedown(e)
+                // this.onmousedown(e)
               },
               // dbl click to edit
               ondblclick: function (e) {
@@ -582,6 +582,10 @@ var com = {
 }
 
 export default com
+
+import data from './data'
+
+window.data = data
 
 const testRoot= document.querySelector('#mtree')
 if(testRoot) m.mount(testRoot, m.component(com, {data: data}))

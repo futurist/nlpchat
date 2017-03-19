@@ -3,7 +3,7 @@ var webpack = require('webpack')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 var loaders = [
-  {test: /script\/.*\.js$/, loader: 'babel', query: {presets: ['es2015'], plugins:[
+  {test: /script\/.*\.js$/, loader: 'babel-loader', query: {presets: ['es2015'], plugins:[
     // Allow function args with commas at end: func( a,b, )
     'syntax-trailing-function-commas',
     // es3 member expression: exports['default']=a

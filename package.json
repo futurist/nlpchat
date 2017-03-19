@@ -1,0 +1,33 @@
+{
+  "name": "nlpchat",
+  "version": "1.0.0",
+  "description": "mithril tree",
+  "main": "script/tree.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-core": "^6.24.0",
+    "babel-loader": "^6.4.1",
+    "babel-plugin-syntax-trailing-function-commas": "^6.22.0",
+    "babel-plugin-transform-es3-member-expression-literals": "^6.22.0",
+    "babel-plugin-transform-es3-property-literals": "^6.22.0",
+    "babel-preset-es2015": "^6.24.0",
+    "extract-text-webpack-plugin": "^2.1.0",
+    "webpack": "^2.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/futurist/nlpchat.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/futurist/nlpchat/issues"
+  },
+  "homepage": "https://github.com/futurist/nlpchat#readme"
+}
